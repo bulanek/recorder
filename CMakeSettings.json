@@ -1,0 +1,38 @@
+﻿{
+  "configurations": [
+    {
+      "buildCommandArgs": "-j 8",
+      "buildRoot": "C:\\Users\\z003tecs\\AppData\\Local\\Temp\\install",
+      "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+      "configurationType": "Debug",
+      "ctestCommandArgs": "",
+      "generator": "MinGW Makefiles",
+      "inheritEnvironments": [],
+      "installRoot": "C:\\Users\\z003tecs\\AppData\\Local\\Temp\\install",
+      "intelliSenseMode": "linux-gcc-arm",
+      "name": "Debug",
+      "variables": [
+        {
+          "name": "CMAKE_MAKE_PROGRAM",
+          "value": "C:\\\\git\\\\mf_devkit\\Tools\\MinGW\\bin\\mingw32-make.exe",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_INSTALL_PREFIX",
+          "value": "C:\\Users\\z003tecs\\AppData\\Local\\Temp\\install",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_BUILD_TYPE",
+          "value": "Debug",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:/UserData/z003tecs/Documents/programs/recorder/cmake/Toolchain-arm-eabi-gcc.cmake",
+          "type": "UNINITIALIZED"
+        }
+      ]
+    }
+  ]
+}
