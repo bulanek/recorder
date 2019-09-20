@@ -42,4 +42,3 @@ extern "C" bool nv_write_pcm_record_data(const uint16_t* const pData, const uint
     return f_NVService.WritePCMRecordData(pData, dataLengthBytes);
 }
 
-

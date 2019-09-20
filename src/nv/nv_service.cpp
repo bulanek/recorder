@@ -147,7 +147,7 @@ bool Service::StartPCM(void)
             break;
         }
 
-        if (_configInfo._filePCMCounter)
+        if (_configInfo._filePCMCounter == 0)
         {
             ++_configInfo._filePCMCounter;
         }
@@ -159,6 +159,17 @@ bool Service::StartPCM(void)
             retVal = false;
             break;
         }
+        /* write header*/
+        WaveFormatHeader header;
+        fillWaveHeader(0, &header);
+        res = f_write(&_pdmpcmFile._FilePCM, &header, sizeof(WaveFormatHeader), &bytesWritten);
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+
+
         SetFileName(PDM, _configInfo._filePCMCounter);
         res = f_open(&_pdmpcmFile._FilePDM, _pdmpcmFile._fileNamePDM, FA_READ);
         if (res != FR_OK)
@@ -191,6 +202,22 @@ bool Service::StopPCM(void)
     UINT bytesWritten;
     do
     {
+        /* update header on size*/
+        WaveFormatHeader header;
+        fillWaveHeader(_pdmpcmFile._FilePCM.fptr, &header);
+        res = f_lseek(&_pdmpcmFile._FilePCM, 0);
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+        res = f_write(&_pdmpcmFile._FilePCM, &header, sizeof(WaveFormatHeader), &bytesWritten);
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+
         res = f_close(&_pdmpcmFile._FilePCM);
         if (res != FR_OK)
         {
@@ -241,42 +268,6 @@ bool Service::GetPDMData(const uint16_t size, uint8_t* pBuffer, uint16_t& numByt
     }
     return retVal;
 }
-
-//bool Service::ProcessPDM2PCM(void)
-//{
-//    uint16_t counterPDMPCMFile = _configInfo._filePCMCounter;
-//    FRESULT res;
-//    do
-//    {
-//        SetFileName(PDM, counterPDMPCMFile);
-//        _configInfo._filePCMCounter = counterPDMPCMFile;
-//        /*  */
-//
-//        res = f_open(&_pdmpcmFile._FilePDM, _pdmpcmFile._fileNamePDM, FA_READ);
-//        if (res != FR_OK)
-//        {
-//            TaskQueueNV queueNV;
-//            queueNV._opcode = NV_PCM_STOP;
-//            tskma_send_to_nv(&queueNV);
-//            break;
-//        }
-//        do
-//        {
-//        // res = f_read(&_pdmpcmFile._FilePDM ,
-//        if (res != FR_OK)
-//        {
-//            TaskQueueNV queueNV;
-//            queueNV._opcode = NV_PCM_STOP;
-//            tskma_send_to_nv(&queueNV);
-//            break;
-//        }
-//
-//        //    pdmpcm_process()
-//        } while (1);
-//    } while (1);
-//}
-
-
 
 bool Service::WritePDMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes)
 {

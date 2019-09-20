@@ -17,7 +17,7 @@ bool Service::Init(void)
 bool Service::ReceiveData(const uint16_t data)
 {
     bool retVal = true;
-    _bufferI2S[_bufferPosition] = (uint16_t)data;
+    _bufferI2S[_bufferPosition] = data;
     ++_bufferPosition;
     do
     {

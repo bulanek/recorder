@@ -67,24 +67,24 @@ uint8_t IsConfPinOn(void)
     return CONFIG_PORT->IDR & CONFIG_PIN;
 }
 
-void InitializeConfigUART(void)
-{
-    // TODO BB: in case of change USART1 -> different!!
-    RCC->APB2ENR |=  RCC_APB2ENR_USART1EN;
-
-    //Disable UART (in case the boot loader left it on)
-    CONFIG_UART->CR1 = 0;
-    CONFIG_UART->CR2 = 0;
-    CONFIG_UART->CR3 = 0;
-
-    /* Configure USART3 */
-    /* 8 data bit, 1 start bit, 1 stop bit; no parity; receive enable;
-     * over-sampling 16 */
-    CONFIG_UART->CR1 = USART_CR1_RE | USART_CR1_TE;
-    //BRR = 12 MHz / required UART clock
-    CONFIG_UART->BRR = (uint16_t) (SystemCoreClock / BAUD_RATE);
-    //enable uart
-    CONFIG_UART->CR1 |= USART_CR1_UE;
-}
+//void InitializeConfigUART(void)
+//{
+//    // TODO BB: in case of change USART1 -> different!!
+//    RCC->APB2ENR |=  RCC_APB2ENR_USART1EN;
+//
+//    //Disable UART (in case the boot loader left it on)
+//    CONFIG_UART->CR1 = 0;
+//    CONFIG_UART->CR2 = 0;
+//    CONFIG_UART->CR3 = 0;
+//
+//    /* Configure USART3 */
+//    /* 8 data bit, 1 start bit, 1 stop bit; no parity; receive enable;
+//     * over-sampling 16 */
+//    CONFIG_UART->CR1 = USART_CR1_RE | USART_CR1_TE;
+//    //BRR = 12 MHz / required UART clock
+//    CONFIG_UART->BRR = (uint16_t) (SystemCoreClock / BAUD_RATE);
+//    //enable uart
+//    CONFIG_UART->CR1 |= USART_CR1_UE;
+//}
 
 

@@ -12,8 +12,10 @@ static void i2s_init_gpio(void)
 
     uint32_t testAHB1 = RCC->AHB1ENR;
     uint32_t testPointerVal = (uint32_t)(&RCC->AHB1ENR);
+    unsigned long rccReg = (unsigned long)RCC;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN;
 
+    unsigned long gpiobReg = (unsigned long)(GPIOB);
     // I2S (MEMS) configuration
     GPIOB->MODER |= GPIO_MODER_MODE12_1 | GPIO_MODER_MODE13_1 | /*GPIO_MODER_MODE14_1 |*/ GPIO_MODER_MODE15_1;  /* Alternate mode*/
 
@@ -33,9 +35,9 @@ static void i2s_init_spi_reg(void)
 	// Disable I2S
     SPI2->I2SCFGR &= ~SPI_I2SCFGR_I2SE;
 
-	// Set 16kHz sampling (assume  data length 16bit) (ref.note : 590)
-	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 62);
-	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 0x01);
+	// Set 192kHz sampling (for data length 16bit) (ref.note : 590)
+	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 11);
+	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 1);
 
 	// Interrupts
     //SPI2->CR2 |= SPI_CR2_RXNEIE;
@@ -44,14 +46,14 @@ static void i2s_init_spi_reg(void)
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SMOD;
 	// Set as master - receive
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SCFG, 0x03);
-	// Standard: MSB
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SSTD, 0x01);
+	// Standard: Philips (default)
+//	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SSTD, 0x00);
 	// Set steady state (high level)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CKPOL, 0x01);
-	// Data length to be transfered (16 bit)
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_DATLEN, 0x00);
-	// Set number of bits per channel (16 bit)
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
+	// Data length to be transfered (16 bit) (default)
+	//SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_DATLEN, 0x00);
+	// Set number of bits per channel (16 bit) (default)
+	//SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
 
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SE;
 }
@@ -64,7 +66,6 @@ static void i2s_init_dma(void)
     DMA1_Stream3->CR &= ~DMA_SxCR_DIR; /* Peripheral to memory. */
     DMA1_Stream3->PAR = SPI2->DR;
 //    DMA1_Stream3->M0AR = 
-
 }
 
 
@@ -77,22 +78,27 @@ static void i2s_init_irt(void)
 
 static void i2s_init_clock(void)
 {
-    // Set clock
+    // Disable clock
     RCC->CR &= ~RCC_CR_PLLI2SON;
     RCC->CR &= ~RCC_CR_PLLON;
     // STM32f041 reference note 105: VCO=PLL_input_f/PLLM; VCO in <1,2>MHz
 	//                                 recommended 2MHz to suppress jitter.
-    // for 16 MHz, PPLM = 8
+    // for 16 MHz PLLM = 8  to VCO_in = 2 MHz
     SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
+
+    // for VCO_out = 432 MHz
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 216);
+
     // see reference note 590: table for PLLI2SN PLLI2SR
-	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 192);
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 424);
 	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, 3);
+
 }
 
 static void i2s_start_clock(void)
 {
-    RCC->CR |= RCC_CR_PLLI2SON;
     RCC->CR |= RCC_CR_PLLON;
+    RCC->CR |= RCC_CR_PLLI2SON;
 }
 
 

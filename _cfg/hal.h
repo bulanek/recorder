@@ -7,5 +7,4 @@
 
 #define FATAL_ERROR(msg) { TRACE_00(TRACE_ERROR, msg); trace_write(); while(1){} }
 
-
 #endif /* _HAL_H_ */

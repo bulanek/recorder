@@ -18,7 +18,8 @@ bool hal_init(void)
         retVal = SysTick_Config(SystemCoreClock / 1000U) == 0 ? true : false;
         NVIC_SetPriorityGrouping(0);
 
-        HAL_PDM_MODE_CFG_INIT();
+        HAL_PDM_PCM_MODE_INIT();
+        HAL_INIT_CONFIG_UART();
     } while (0);
     return retVal;
 }

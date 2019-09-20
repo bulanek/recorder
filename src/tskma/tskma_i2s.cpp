@@ -26,7 +26,8 @@ extern "C" void task_i2s(void* pParameters)
         if (SPI2->SR & SPI_SR_RXNE)
         {
             ++counterOut;
-            i2s_receive_data(SPI2->DR);
+            volatile uint32_t data = SPI2->DR;
+            i2s_receive_data(data);
         }
     }
 }

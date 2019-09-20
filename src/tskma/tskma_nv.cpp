@@ -71,11 +71,11 @@ static void task_nv_common(void* pParameters)
             }
         }
     }
-
 }
 
 extern "C" void task_nv(void* pParameters)
 {
+    printf("Startk of nv task\n");
     if (nv_init() == false)
     {
         TRACE_00(TRACE_ERROR, "nv init failed");
@@ -138,13 +138,13 @@ static void getPDMtoPCMData(void)
             }
             isNewFile = true;
         }
-
     } while (isNewFile == true);
 }
 
 
 extern "C" void task_nv_pcm(void* pParameters)
 {
+
     if (nv_init() == false)
     {
         TRACE_00(TRACE_ERROR, "nv init failed");

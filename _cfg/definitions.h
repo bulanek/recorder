@@ -53,11 +53,6 @@
 #define CONFIG_PIN      (1 << 4)
 #define CONFIG_PORT     GPIOA
 
-#define CONFIG_UART_TX_PIN (1 << 5)
-#define CONFIG_UART_RX_PIN (1 << 6)
-#define CONFIG_UART_PORT GPIOB
-#define CONFIG_UART USART1
-#define BAUD_RATE 115200
 
 #define LED_1_PIN							(1 << 3)
 #define LED_2_PIN							(1 << 4)
@@ -78,9 +73,9 @@
 #define SUFFIX_ADD(NAME, SUFFIX) NAME ## SUFFIX
 #define SUFFIX_EXPAND_ADD(NAME, SUFFIX) SUFFIX_ADD(NAME,SUFFIX)
 
-#define SET_REGISTER_VALUE(REGISTER, NAME, VALUE)							\
+#define SET_REGISTER_VALUE(REGISTER, NAME, VALUE)		{					\
 				REGISTER &= (~NAME ## _Msk);								\
-                REGISTER |= ( ((uint32_t)VALUE) << (NAME ## _Pos)) \
+                REGISTER |= ( ((uint32_t)VALUE) << (NAME ## _Pos));} \
 
 /// BLOCK SIZE for sd card
 #define BLOCK_SIZE 512

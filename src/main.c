@@ -6,6 +6,8 @@
 #include "hal/_com/hal_com.h"
 #include "trace/_com/trace_com.h"
 
+#include <stdio.h>
+
 // CONSTANTS
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )

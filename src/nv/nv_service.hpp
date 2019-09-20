@@ -46,7 +46,7 @@ private:
 
     #define NV_FILE_NAME_PREFIX "DMP"
     #define NV_PDM_FILE_NAME_SUFFIX ".pdm"
-    #define NV_PCM_FILE_NAME_SUFFIX ".pcm"
+    #define NV_PCM_FILE_NAME_SUFFIX ".wav"
     #define NV_FILE_INFO "NV_INFO.bin"
     static const uint16_t NV_FILE_NAME_SIZE = STRLEN_STATIC(NV_FILE_NAME_PREFIX) + 3 + 4 + 1 + 10; /* <NV_FILE_NAME_PREFIX>_XXX.txt*/
     static const uint16_t MAX_NUM_OF_FILES = 1000U;

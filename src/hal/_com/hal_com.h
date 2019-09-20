@@ -36,8 +36,13 @@ bool hal_init(void);
 
 HalMode hal_get_mode(void);
 
-#ifndef HAL_PDM_MODE_CFG_INIT
-void HAL_PDM_MODE_CFG_INIT(void);
+#ifndef HAL_PDM_PCM_MODE_INIT
+void HAL_PDM_PCM_MODE_INIT(void);
+#endif
+
+/** Start Debug console - uart. */
+#ifndef HAL_INIT_CONFIG_UART
+void HAL_INIT_CONFIG_UART(void);
 #endif
 
 #ifndef HAL_RTC_INIT
