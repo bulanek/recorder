@@ -1,4 +1,8 @@
 #include "trace_service.hpp"
+#include "trace_out.h"
+#include "trace_hash.hpp"
+
+constexpr const char* pFileName = file_name(__FILE__);
 
 TraceService::TraceService() : _position(0)
 {
@@ -9,19 +13,10 @@ bool TraceService::Init(void)
     bool retVal = true;
     do
     {
-        FRESULT res = f_mount(&_FatFs, "", 0);
-        if (res != FR_OK && res != FR_EXIST)
+        retVal = TRACE_INIT(_buffer,sizeof(_buffer));
+        if (retVal == true)
         {
-            retVal = false;
-            break;
-        }
-
-        /* Read info file if exist*/
-        res = f_open(&_infoFile, TRACE_FILE_NAME, FA_CREATE_NEW | FA_WRITE );
-        if (res != FR_OK)
-        {
-            retVal = false;
-            break;
+            TRACE_00(TRACE_LOG, "Trace initialized");
         }
     } while (0);
     return retVal;
@@ -51,12 +46,13 @@ void TraceService::addEntry_02(TRACE_LEVEL level, const uint16_t line, const uin
     taskEXIT_CRITICAL();
 }
 
-void TraceService::TraceWrite(void)
+bool TraceService::TraceWrite(void)
 {
-    UINT bytesWritten;
+    bool retVal;
     taskENTER_CRITICAL();
-    (void) f_write(&_infoFile, _buffer, BUFFER_SIZE, &bytesWritten);
+    retVal = TRACE_DUMP(_buffer,sizeof(_buffer));
     taskEXIT_CRITICAL();
+    return retVal;
 }
 
 void TraceService::addHeader(TRACE_LEVEL level, const uint16_t line, const uint16_t sourceId)
@@ -83,3 +79,4 @@ void TraceService::positionInc(void)
     ++_position;
     _position %= BUFFER_SIZE;
 }
+

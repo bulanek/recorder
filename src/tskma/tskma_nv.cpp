@@ -75,7 +75,9 @@ static void task_nv_common(void* pParameters)
 
 extern "C" void task_nv(void* pParameters)
 {
-    printf("Startk of nv task\n");
+    printf("Start of nv task\n");
+    printf("Start2 of nv task\n");
+
     if (nv_init() == false)
     {
         TRACE_00(TRACE_ERROR, "nv init failed");
@@ -144,9 +146,12 @@ static void getPDMtoPCMData(void)
 
 extern "C" void task_nv_pcm(void* pParameters)
 {
-
+    printf("%s","1: start of nv task for pcm\n");
+    char a = (char)getchar();
+    
     if (nv_init() == false)
     {
+        printf("init");
         TRACE_00(TRACE_ERROR, "nv init failed");
         vTaskDelete(NULL);
         return;

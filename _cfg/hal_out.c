@@ -20,9 +20,9 @@ void HAL_PDM_PCM_MODE_INIT(void)
     EXTI->IMR |= 0x01; /* interrupt mask reg*/
     EXTI->RTSR |= 0x01;
 
-	IRQn_Type type = EXTI0_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 15U);
+    IRQn_Type type = EXTI0_IRQn;
+    NVIC_EnableIRQ(type);
+    NVIC_SetPriority(type, 15U);
 }
 
 /*
@@ -33,28 +33,32 @@ void HAL_INIT_CONFIG_UART(void)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-    GPIOA->MODER |= GPIO_MODER_MODE2_0; /* Pin2(Tx) output*/
+    USART2->CR1 = 0;
+    USART2->CR2 = 0;
+    USART2->CR3 = 0;
+
+    GPIOA->MODER |= (GPIO_MODER_MODE2_1 ) | (GPIO_MODER_MODE3_1 ) ; /* Pin2,3 alternate function mode*/
     GPIOA->AFR[0] |= (GPIO_AFRL_AFRL2_0 | GPIO_AFRL_AFRL2_1 | GPIO_AFRL_AFRL2_2);
     GPIOA->AFR[0] |= (GPIO_AFRL_AFRL3_0 | GPIO_AFRL_AFRL3_1 | GPIO_AFRL_AFRL3_2); /* Usart */
 
+    GPIOA->OSPEEDR |= (GPIO_OSPEEDER_OSPEEDR2_1 | GPIO_OSPEEDER_OSPEEDR2_0);
+    GPIOA->PUPDR |= GPIO_PUPDR_PUPD2_0;
+
     //enable uart
     USART2->CR1 |= USART_CR1_UE;
-    /*BRR = 16 MHz / (required UART clock * 8x (2-OVER8))*/
-    USART2->BRR = (uint32_t)(SystemCoreClock / (16 * 115200U));
+    /*USARDIV = 16 MHz / (required UART clock * 8x (2-OVER8))*/
+    USART2->BRR = 0x08B; /* 8.6875 -> Mantisa(USARDIV)=8 <4 | Fraction*16 (0.6875*16 = 11)/
+    USART2->
     /* Configure USART1 */
     /* 8 data bit, 1 start bit, 1 stop bit; no parity; transmit enable;
      * over-sampling 16 */
-    USART2->CR1 |= USART_CR1_TE;
+    USART2->CR1 |= USART_CR1_TE | USART_CR1_RE ;
+    while ((USART2->SR & USART_SR_TC) == 0);
 }
 
 
 int _read(int file, char *pData, int len)
 {
-    //    if (file != STDIN_FILENO)
-    //    {
-    //        errno = EBADF;
-    //        return -1;
-    //    }
     int bytes_read;
     for (bytes_read = 0; bytes_read < len; ++bytes_read)
     {
@@ -67,17 +71,13 @@ int _read(int file, char *pData, int len)
 
 int _write(int file, char *pData, int len)
 {
-    //    if (file != STDOUT_FILENO)
-    //    {
-    //        errno = EBADF;
-    //        return -1;
-    //    }CONFIG_UART
     char* pTmpData = pData;
     int bytes_written;
     for (bytes_written = 0; bytes_written < len; ++bytes_written)
     {
         while ((USART2->SR & USART_SR_TXE) == 0U);
-        USART2->DR = pTmpData[bytes_written];
+        volatile uint8_t data = pTmpData[bytes_written];
+        USART2->DR = data;
         if (pTmpData[bytes_written] == '\n')
         {
             while ((USART2->SR & USART_SR_TXE) == 0U);

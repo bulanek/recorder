@@ -14,7 +14,7 @@ bool hal_init(void)
         //    break;
         //}
 
-        SystemCoreClockUpdate();
+        //SystemCoreClockUpdate();
         retVal = SysTick_Config(SystemCoreClock / 1000U) == 0 ? true : false;
         NVIC_SetPriorityGrouping(0);
 
