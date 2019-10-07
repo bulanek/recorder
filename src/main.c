@@ -1,10 +1,8 @@
-
-#include "recorder_inc.h"
 #include "tskma_tasks.h"
-#include "i2s/_com/i2s_com.h"
-#include "nv/_com/nv_com.h" 
-#include "hal/_com/hal_com.h"
-#include "trace/_com/trace_com.h"
+#include "i2s_com.h"
+#include "nv_com.h" 
+#include "hal_com.h"
+#include "trace_com.h"
 
 #include <stdio.h>
 

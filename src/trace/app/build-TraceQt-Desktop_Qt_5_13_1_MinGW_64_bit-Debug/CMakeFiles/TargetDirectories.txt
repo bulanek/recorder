@@ -1,0 +1,4 @@
+C:/UserData/z003tecs/Documents/programs/recorder/src/trace/app/build-TraceQt-Desktop_Qt_5_13_1_MinGW_64_bit-Debug/CMakeFiles/TraceQt.dir
+C:/UserData/z003tecs/Documents/programs/recorder/src/trace/app/build-TraceQt-Desktop_Qt_5_13_1_MinGW_64_bit-Debug/CMakeFiles/edit_cache.dir
+C:/UserData/z003tecs/Documents/programs/recorder/src/trace/app/build-TraceQt-Desktop_Qt_5_13_1_MinGW_64_bit-Debug/CMakeFiles/rebuild_cache.dir
+C:/UserData/z003tecs/Documents/programs/recorder/src/trace/app/build-TraceQt-Desktop_Qt_5_13_1_MinGW_64_bit-Debug/CMakeFiles/TraceQt_autogen.dir

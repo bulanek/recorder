@@ -10,6 +10,7 @@ namespace NV
 class Service
 {
 public:
+    Service(): _pdmStarted(false) {}
     bool Init(void);
     bool StartPDM(void);
     bool StopPDM(void);
@@ -21,6 +22,8 @@ public:
 
     bool WritePDMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes);
     bool WritePCMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes);
+
+    bool _pdmStarted;
 
 private:
     typedef enum

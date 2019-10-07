@@ -77,7 +77,6 @@ int rtc_setutc (uint32_t tmr)
 {
 	uint32_t n = 0;
 
-
 	if (rtcok) {
 		PWR->CR |= RTC_CR_ALRAE;		/* Enable write access to backup domain */
 		for (n = 100000; n && !(RTC->CR & RTC_CR_BYPSHAD); n--) ;	/* Wait for end of RTC internal process */
@@ -180,5 +179,4 @@ int rtc_settime (const RTCTIME* rtc)
 
 	return rtc_setutc(utc);
 }
-
 

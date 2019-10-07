@@ -10,6 +10,11 @@ extern "C"
 bool i2s_init(void);
 void i2s_receive_data(const uint16_t data);
 
+uint16_t* i2s_get_buffer1(void);
+uint16_t* i2s_get_buffer2(void);
+uint16_t i2s_get_buffer_size_word(void);
+
+
 #ifndef I2S_INIT_MIC
 void I2S_INIT_MIC(void);
 #endif /* I2S_INIT_MIC */

@@ -2,6 +2,8 @@
 #include "_com/nv_com.h"
 #include "tskma_tasks.h"
 #include "pdmpcm_com.h"
+#include "trace_com.h"
+#include "trace_out.hpp"
 
 namespace NV
 {
@@ -22,6 +24,7 @@ bool Service::Init(void)
         res = f_open(&_infoFile, NV_FILE_INFO, FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
         if (res != FR_OK)
         {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed open info file: %i", res);
             retVal = false;
             break;
         }
@@ -96,7 +99,7 @@ bool Service::StartPDM(void)
             retVal = false;
             break;
         }
-
+        _pdmStarted = true;
 
     } while (0);
     return retVal;
@@ -169,7 +172,6 @@ bool Service::StartPCM(void)
             break;
         }
 
-
         SetFileName(PDM, _configInfo._filePCMCounter);
         res = f_open(&_pdmpcmFile._FilePDM, _pdmpcmFile._fileNamePDM, FA_READ);
         if (res != FR_OK)
@@ -190,6 +192,7 @@ bool Service::StartPCM(void)
             retVal = false;
             break;
         }
+        TRACE_01(TRACE_LEVEL_LOG, "Start of writing pcm file with index %i", _configInfo._filePCMCounter);
 
     } while (0);
     return retVal;
@@ -273,16 +276,27 @@ bool Service::WritePDMRecordData(const uint16_t* const pData, const uint16_t dat
 {
     bool retVal = true;
     UINT numBytesWritten;
-    FRESULT res = f_write(&_pdmpcmFile._FilePDM, pData, dataLengthBytes, &numBytesWritten);
-    if (res != FR_OK)
+    do
     {
-        retVal = false;
-    }
-    res = f_sync(&_pdmpcmFile._FilePDM);
-    if (res != FR_OK)
-    {
-        retVal = false;
-    }
+        if (_pdmStarted == false)
+        {
+            retVal = false;
+            break;
+        }
+        FRESULT res = f_write(&_pdmpcmFile._FilePDM, pData, dataLengthBytes, &numBytesWritten);
+
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+        res = f_sync(&_pdmpcmFile._FilePDM);
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+    } while (0);
     return retVal;
 }
 

@@ -1,6 +1,7 @@
 #include "_com/tskma_tasks.h"
 #include "nv_com.h"
 #include "trace_com.h"
+#include "trace_out.hpp"
 #include "recorder_inc.h"
 #include "pdmpcm_com.h"
 #include "tskma_service.hpp"
@@ -11,6 +12,7 @@ static void task_nv_common(void* pParameters)
     TaskQueueNV queue;
     QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;
     TickType_t xTicksToWait = 0;
+    TRACE_00(TRACE_LEVEL_LOG, "Start nv common");
 
     for (;; )
     {
@@ -19,34 +21,38 @@ static void task_nv_common(void* pParameters)
             switch (queue._opcode)
             {
             case NV_PDM_START:
+                TRACE_00(TRACE_LEVEL_LOG, "NV_PDM_START request");
                 if (nv_start_pdm() != true)
                 {
-                    TRACE_00(TRACE_ERROR, "Start nv pdm failed");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Start nv pdm failed");
                 }
                 break;
             case NV_PDM_STOP:
+                TRACE_00(TRACE_LEVEL_LOG, "NV_PDM_STOP request");
                 if (nv_stop_pdm() != true)
                 {
-                    TRACE_00(TRACE_ERROR, "Stop nv pdm stopped");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Stop nv pdm stopped");
                 }
                 break;
             case NV_PCM_START:
+                TRACE_00(TRACE_LEVEL_LOG, "NV_PCM_START request");
                 if (nv_start_pcm() != true)
                 {
-                    TRACE_00(TRACE_ERROR, "Start nv pcm failed");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Start nv pcm failed");
                 }
                 break;
             case NV_PCM_STOP:
+                TRACE_00(TRACE_LEVEL_LOG, "NV_PCM_STOP request");
                 if (nv_stop_pcm() != true)
                 {
-                    TRACE_00(TRACE_ERROR, "Stop nv pcm failed");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Stop nv pcm failed");
                 }
                 break;
             case NV_OPCODE_WRITE_PDM:
             {
                 if (nv_write_pdm_record_data(queue._pData, queue._dataLengthBytes) == false)
                 {
-                    TRACE_00(TRACE_WARN, "Write record pdm data failed");
+                    TRACE_00(TRACE_LEVEL_WARN, "Write record pdm data failed");
                 }
                 vPortFree(queue._pData);
                 break;
@@ -55,13 +61,15 @@ static void task_nv_common(void* pParameters)
             {
                 if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
                 {
-                    TRACE_00(TRACE_WARN, "Write record pcm data failed");
+                    TRACE_00(TRACE_LEVEL_WARN, "Write record pcm data failed");
                 }
                 vPortFree(queue._pData);
                 break;
             }
             case NV_OPCODE_STOP_RESET:
+                TRACE_00(TRACE_LEVEL_LOG, "NV_STOP_RESET request");
                 (void)nv_stop_pdm();
+                (void)nv_stop_pcm();
                 NVIC_SystemReset();
                 break;
 
@@ -75,18 +83,11 @@ static void task_nv_common(void* pParameters)
 
 extern "C" void task_nv(void* pParameters)
 {
-    printf("Start of nv task\n");
-    printf("Start2 of nv task\n");
 
-    if (nv_init() == false)
-    {
-        TRACE_00(TRACE_ERROR, "nv init failed");
-        vTaskDelete(NULL);
-    	return;
-    }
+    TRACE_00(TRACE_LEVEL_LOG, "Start of nv task");
     if (nv_start_pdm() == false)
     {
-        TRACE_00(TRACE_ERROR, "nv init failed");
+        TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
         vTaskDelete(NULL);
     	return;
     }
@@ -107,12 +108,12 @@ static void getPDMtoPCMData(void)
         uint16_t numReadBytes;
         if (queuePDMPCM._pdmDataPointer == NULL)
         {
-            TRACE_00(TRACE_ERROR, "No pdm data");
+            TRACE_00(TRACE_LEVEL_ERROR, "No pdm data");
             break;
         }
         if (nv_get_pdm_data(queuePDMPCM._sizePdmDataBytes, queuePDMPCM._pdmDataPointer, &numReadBytes) == false)
         {
-            TRACE_00(TRACE_ERROR, "send to pdm pcm task failed");
+            TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
             pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
             break;
         }
@@ -121,21 +122,22 @@ static void getPDMtoPCMData(void)
         {
             if (tskma_send_to_pdm_pcm(&queuePDMPCM) == false)
             {
-                TRACE_00(TRACE_ERROR, "send to pdm pcm task failed");
+                TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
                 break;
             }
         }
         if (numReadBytes != queuePDMPCM._sizePdmDataBytes) /* here got to the next pdm file*/
         {
+            TRACE_00(TRACE_LEVEL_WARN, "End of file, next file start");
             pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
             if (nv_stop_pcm() == false)
             {
-                TRACE_00(TRACE_ERROR, "nv_stop_pcm failed");
+                TRACE_00(TRACE_LEVEL_ERROR, "nv_stop_pcm failed");
                 break;
             }
             if (nv_start_pcm() == false)
             {
-                TRACE_00(TRACE_ERROR, "nv_start_pcm failed");
+                TRACE_00(TRACE_LEVEL_ERROR, "nv_start_pcm failed");
                 break;
             }
             isNewFile = true;
@@ -146,29 +148,15 @@ static void getPDMtoPCMData(void)
 
 extern "C" void task_nv_pcm(void* pParameters)
 {
-    printf("%s","1: start of nv task for pcm\n");
-    char a = (char)getchar();
+    TRACE_00(TRACE_LEVEL_LOG,"Start of nv task for pcm");
     
-    if (nv_init() == false)
-    {
-        printf("init");
-        TRACE_00(TRACE_ERROR, "nv init failed");
-        vTaskDelete(NULL);
-        return;
-    }
     if (nv_start_pcm() == false)
     {
-        TRACE_00(TRACE_ERROR, "nv init failed");
+        TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
         vTaskDelete(NULL);
         return;
     }
 
-    if (pdmpcm_init() != true)
-    {
-        TRACE_00(TRACE_ERROR, "pdmpcm init failed");
-        vTaskDelete(NULL);
-        return;
-    }
 
     getPDMtoPCMData();
 
@@ -185,13 +173,13 @@ extern "C" void task_nv_pcm(void* pParameters)
             case NV_PCM_START:
                 if (nv_start_pcm() != true)
                 {
-                    TRACE_00(TRACE_ERROR, "Start nv pdm failed");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Start nv pdm failed");
                 }
                 break;
             case NV_OPCODE_WRITE_PCM_DATA:
                 if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
                 {
-                    TRACE_00(TRACE_ERROR, "Write pcm data failed");
+                    TRACE_00(TRACE_LEVEL_ERROR, "Write pcm data failed");
                 }
                 pdmpcm_push_pcm_buffer(reinterpret_cast<int16_t*>(queue._pData));
                 getPDMtoPCMData();
@@ -201,10 +189,9 @@ extern "C" void task_nv_pcm(void* pParameters)
                 NVIC_SystemReset();
                 break;
             default:
-                TRACE_01(TRACE_ERROR, "Unexpected nv opcode %i", queue._opcode);
+                TRACE_01(TRACE_LEVEL_ERROR, "Unexpected nv opcode %i", queue._opcode);
                 break;
             }
         }
     }
-    //task_nv_common(pParameters);
 }

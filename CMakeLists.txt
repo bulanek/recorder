@@ -188,6 +188,7 @@ foreach(module src startup _cfg  )
 	file(GLOB_RECURSE TMP_SOURCES ${SRC_ROOT}/${module}/*.c*)
 	list(APPEND SOURCES ${TMP_SOURCES})
 endforeach(module)
+list(FILTER SOURCES EXCLUDE REGEX ".*/src/trace/app/*")
 
 # Sources for FatFS
 set (SOURCES ${SOURCES}
@@ -222,7 +223,7 @@ SET (INC_DIRS ${INC_DIRS}
     ${SRC_ROOT}/src/hal/_com
     ${SRC_ROOT}/src/i2s/_com
     ${SRC_ROOT}/src/nv/_com
-    ${SRC_ROOT}/src/trace/_com
+    ${SRC_ROOT}/src/trace/src/_com
     ${SRC_ROOT}/src/pdmpcm/_com
     ${SRC_ROOT}/_cfg
     ${SRC_ROOT}/_cfg/ff13

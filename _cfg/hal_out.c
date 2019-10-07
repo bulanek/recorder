@@ -71,6 +71,7 @@ int _read(int file, char *pData, int len)
 
 int _write(int file, char *pData, int len)
 {
+    taskENTER_CRITICAL();
     char* pTmpData = pData;
     int bytes_written;
     for (bytes_written = 0; bytes_written < len; ++bytes_written)
@@ -85,7 +86,8 @@ int _write(int file, char *pData, int len)
             break;
         }
     }
-    return bytes_written;
+    taskEXIT_CRITICAL();
+    return len;
 }
 
 

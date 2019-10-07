@@ -5,6 +5,6 @@
 
 #define STRLEN_STATIC(s) _STRLEN_STATIC(s)
 
-#define FATAL_ERROR(msg) { TRACE_00(TRACE_ERROR, msg); trace_write(); while(1){} }
+#define FATAL_ERROR(msg) { TRACE_00(TRACE_LEVEL_ERROR, msg); while(1){} }
 
 #endif /* _HAL_H_ */

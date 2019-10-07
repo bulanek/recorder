@@ -3,7 +3,6 @@
 
 #include "hal.h"
 #include "definitions.h"
-#include "trace_cfg.h"
 
 
 #endif /* RECORDER_CFG_H_ */

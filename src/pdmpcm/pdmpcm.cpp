@@ -18,8 +18,6 @@ bool pdmpcm_init(void)
     bool retVal = true;
     do
     {
-        PDMPCM_INIT();
-
         f_pdmBufLen = f_pdmSamplingHz / 1000;
         f_pcmBufLen = f_pdmBufLen / f_decimationFactor;
         f_gain = 1;

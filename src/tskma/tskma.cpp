@@ -2,6 +2,7 @@
 #include "_com/tskma_tasks.h"
 #include "tskma_service.hpp"
 #include "trace_com.h"
+#include "trace_out.hpp"
 
 TSKMA::Service f_taskService;
 
@@ -34,7 +35,7 @@ extern "C" bool tskma_send_to_i2s(const TaskQueueI2S* const pQueueData)
     BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_I2S]._queueHandle, pQueueData, (TickType_t)0);
     if (err != pdTRUE)
     {
-        TRACE_01(TRACE_ERROR, "Send message failure: %i", err);
+        TRACE_01(TRACE_LEVEL_ERROR, "Send message failure: %i", err);
         return false;
     }
     return true;
@@ -45,7 +46,7 @@ extern "C" bool tskma_send_to_nv(const TaskQueueNV* const pQueueData)
     BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_NV]._queueHandle, pQueueData, (TickType_t)0);
     if (err != pdTRUE)
     {
-        TRACE_01(TRACE_ERROR, "Send message failure: %i", err);
+        TRACE_01(TRACE_LEVEL_ERROR, "Send message failure: %i", err);
         return false;
     }
     return true;
@@ -75,7 +76,7 @@ extern "C" bool tskma_send_to_pdm_pcm(const TaskQueuePDMPCM* const pQueueData)
     BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_PDM_PCM]._queueHandle, pQueueData, (TickType_t)0);
     if (err != pdTRUE)
     {
-        TRACE_01(TRACE_ERROR, "Send message failure: %i", err);
+        TRACE_01(TRACE_LEVEL_ERROR, "Send message failure: %i", err);
         return false;
     }
     return true;

@@ -55,25 +55,49 @@ static void i2s_init_spi_reg(void)
 	// Set number of bits per channel (16 bit) (default)
 	//SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
 
+    SPI2->CR2 |= SPI_CR2_RXDMAEN; /* Enable Rx DMA*/
+
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SE;
+
+
 }
 
 static void i2s_init_dma(void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
 
-    DMA1_Stream3->CR |= DMA_SxCR_CHSEL_1 | DMA_SxCR_CHSEL_0; /* channel 3 of Stream 3 */
-    DMA1_Stream3->CR &= ~DMA_SxCR_DIR; /* Peripheral to memory. */
     DMA1_Stream3->PAR = SPI2->DR;
-//    DMA1_Stream3->M0AR = 
-}
+    DMA1_Stream3->M0AR = (uint32_t)i2s_get_buffer1();
+    DMA1_Stream3->M1AR = (uint32_t)i2s_get_buffer2();
+    DMA1_Stream3->NDTR = i2s_get_buffer_size_word();
 
+    DMA1_Stream3->CR &= ~(DMA_SxCR_CHSEL  /* Channel 0 (SPI2_Rx) */
+        | DMA_SxCR_DIR      /* Peripheral to memory. 00 */
+        | DMA_SxCR_PL);     /* Priority */
+
+//    DMA1_Stream3->CR |= DMA_SxCR_DBM; /* Double buffer switching */
+    DMA1_Stream3->CR |= DMA_SxCR_MSIZE_0; /* 16 bit size of memory */
+    DMA1_Stream3->CR |= DMA_SxCR_PSIZE_0; /* 16 bit size of peripheral. */
+    DMA1_Stream3->CR |= DMA_SxCR_TCIE; /*  Transfer complete interrupt enable */
+    DMA1_Stream3->CR |= DMA_SxCR_TEIE; /* Transfer error interrupt enable */
+
+    DMA1->LIFCR = DMA_LIFCR_CTCIF3;
+    DMA1->LIFCR = DMA_LIFCR_CTEIF3;
+
+    unsigned long which = (unsigned long)DMA1_Stream3;
+    volatile DMA_Stream_TypeDef* pStream = DMA1_Stream3;
+    DMA1_Stream3->CR |= DMA_SxCR_EN;
+}
 
 static void i2s_init_irt(void)
 {
 	IRQn_Type type = SPI2_IRQn;
 	NVIC_EnableIRQ(type);
 	NVIC_SetPriority(type, 15U);
+
+    type = DMA1_Stream3_IRQn;
+    NVIC_EnableIRQ(type);
+    NVIC_SetPriority(type, 15U);
 }
 
 static void i2s_init_clock(void)
@@ -108,6 +132,8 @@ void I2S_INIT_MIC(void)
     i2s_init_irt();
     i2s_init_clock();
     i2s_init_spi_reg();
+    i2s_init_dma();
     i2s_start_clock();
+
 }
 
