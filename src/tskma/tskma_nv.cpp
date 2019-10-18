@@ -54,7 +54,6 @@ static void task_nv_common(void* pParameters)
                 {
                     TRACE_00(TRACE_LEVEL_WARN, "Write record pdm data failed");
                 }
-                vPortFree(queue._pData);
                 break;
             }
             case NV_OPCODE_WRITE_PCM:
@@ -95,55 +94,55 @@ extern "C" void task_nv(void* pParameters)
     task_nv_common(pParameters);
 }
 
-static void getPDMtoPCMData(void)
-{
-    bool isNewFile = false;
-    do
-    {
-        isNewFile = false;
-        TaskQueuePDMPCM queuePDMPCM;
-        queuePDMPCM._opcode = PDM_PCM_GET_PCM_DATA;
-        queuePDMPCM._pdmDataPointer = pdmpcm_pop_pdm_buffer();
-        queuePDMPCM._sizePdmDataBytes = pdmpcm_get_pdm_size_in_bytes();
-        uint16_t numReadBytes;
-        if (queuePDMPCM._pdmDataPointer == NULL)
-        {
-            TRACE_00(TRACE_LEVEL_ERROR, "No pdm data");
-            break;
-        }
-        if (nv_get_pdm_data(queuePDMPCM._sizePdmDataBytes, queuePDMPCM._pdmDataPointer, &numReadBytes) == false)
-        {
-            TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
-            pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
-            break;
-        }
-
-        if (numReadBytes == queuePDMPCM._sizePdmDataBytes)
-        {
-            if (tskma_send_to_pdm_pcm(&queuePDMPCM) == false)
-            {
-                TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
-                break;
-            }
-        }
-        if (numReadBytes != queuePDMPCM._sizePdmDataBytes) /* here got to the next pdm file*/
-        {
-            TRACE_00(TRACE_LEVEL_WARN, "End of file, next file start");
-            pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
-            if (nv_stop_pcm() == false)
-            {
-                TRACE_00(TRACE_LEVEL_ERROR, "nv_stop_pcm failed");
-                break;
-            }
-            if (nv_start_pcm() == false)
-            {
-                TRACE_00(TRACE_LEVEL_ERROR, "nv_start_pcm failed");
-                break;
-            }
-            isNewFile = true;
-        }
-    } while (isNewFile == true);
-}
+//static void getPDMtoPCMData(void)
+//{
+//    bool isNewFile = false;
+//    do
+//    {
+//        isNewFile = false;
+//        TaskQueuePDMPCM queuePDMPCM;
+//        queuePDMPCM._opcode = PDM_PCM_GET_PCM_DATA;
+//        queuePDMPCM._pdmDataPointer = pdmpcm_pop_pdm_buffer();
+//        queuePDMPCM._sizePdmDataWord = pdmpcm_get_pdm_size_in_bytes();
+//        uint16_t numReadBytes;
+//        if (queuePDMPCM._pdmDataPointer == NULL)
+//        {
+//            TRACE_00(TRACE_LEVEL_ERROR, "No pdm data");
+//            break;
+//        }
+//        if (nv_get_pdm_data(queuePDMPCM._sizePdmDataWord, queuePDMPCM._pdmDataPointer, &numReadBytes) == false)
+//        {
+//            TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
+//            pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
+//            break;
+//        }
+//
+//        if (numReadBytes == queuePDMPCM._sizePdmDataWord)
+//        {
+//            if (tskma_send_to_pdm_pcm(&queuePDMPCM) == false)
+//            {
+//                TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
+//                break;
+//            }
+//        }
+//        if (numReadBytes != queuePDMPCM._sizePdmDataWord) /* here got to the next pdm file*/
+//        {
+//            TRACE_00(TRACE_LEVEL_WARN, "End of file, next file start");
+//            pdmpcm_push_pdm_buffer(reinterpret_cast<uint8_t*>(queuePDMPCM._pdmDataPointer));
+//            if (nv_stop_pcm() == false)
+//            {
+//                TRACE_00(TRACE_LEVEL_ERROR, "nv_stop_pcm failed");
+//                break;
+//            }
+//            if (nv_start_pcm() == false)
+//            {
+//                TRACE_00(TRACE_LEVEL_ERROR, "nv_start_pcm failed");
+//                break;
+//            }
+//            isNewFile = true;
+//        }
+//    } while (isNewFile == true);
+//}
 
 
 extern "C" void task_nv_pcm(void* pParameters)
@@ -158,7 +157,7 @@ extern "C" void task_nv_pcm(void* pParameters)
     }
 
 
-    getPDMtoPCMData();
+    //getPDMtoPCMData();
 
     TaskQueueNV queue;
     QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;
@@ -181,8 +180,9 @@ extern "C" void task_nv_pcm(void* pParameters)
                 {
                     TRACE_00(TRACE_LEVEL_ERROR, "Write pcm data failed");
                 }
-                pdmpcm_push_pcm_buffer(reinterpret_cast<int16_t*>(queue._pData));
-                getPDMtoPCMData();
+                //pdmpcm_push_pcm_buffer(reinterpret_cast<int16_t*>(queue._pData));
+                vPortFree(queue._pData);
+                //getPDMtoPCMData();
                 break;
             case NV_OPCODE_STOP_RESET:
                 (void)nv_stop_pcm();

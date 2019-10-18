@@ -9,7 +9,13 @@
 #include "nv_com.h"
 
 
+
+
 namespace I2S {
+Service::Service()
+{
+}
+
 bool Service::Init(void)
 {
     I2S_INIT_MIC();

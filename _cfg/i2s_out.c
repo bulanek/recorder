@@ -2,7 +2,6 @@
 #include "recorder_inc.h"
 #include "i2s_com.h"
 
-
 static void i2s_init_gpio(void)
 {
     /* I2S pins:
@@ -58,15 +57,17 @@ static void i2s_init_spi_reg(void)
     SPI2->CR2 |= SPI_CR2_RXDMAEN; /* Enable Rx DMA*/
 
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SE;
-
-
 }
 
 static void i2s_init_dma(void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+    RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
 
-    DMA1_Stream3->PAR = SPI2->DR;
+    DMA1_Stream3->CR &= ~DMA_SxCR_EN;
+    while((DMA1_Stream3->CR & DMA_SxCR_EN) != 0);
+
+    DMA1_Stream3->PAR = &(SPI2->DR);
     DMA1_Stream3->M0AR = (uint32_t)i2s_get_buffer1();
     DMA1_Stream3->M1AR = (uint32_t)i2s_get_buffer2();
     DMA1_Stream3->NDTR = i2s_get_buffer_size_word();
@@ -74,12 +75,24 @@ static void i2s_init_dma(void)
     DMA1_Stream3->CR &= ~(DMA_SxCR_CHSEL  /* Channel 0 (SPI2_Rx) */
         | DMA_SxCR_DIR      /* Peripheral to memory. 00 */
         | DMA_SxCR_PL);     /* Priority */
+    //DMA1_Stream3->CR |= DMA_SxCR_PL_0 | DMA_SxCR_PL_1;
 
-//    DMA1_Stream3->CR |= DMA_SxCR_DBM; /* Double buffer switching */
+    DMA1_Stream3->CR |= DMA_SxCR_DBM; /* Double buffer switching */
+    DMA1_Stream3->CR |= DMA_SxCR_CIRC; /* Circ mode */
+
     DMA1_Stream3->CR |= DMA_SxCR_MSIZE_0; /* 16 bit size of memory */
     DMA1_Stream3->CR |= DMA_SxCR_PSIZE_0; /* 16 bit size of peripheral. */
     DMA1_Stream3->CR |= DMA_SxCR_TCIE; /*  Transfer complete interrupt enable */
     DMA1_Stream3->CR |= DMA_SxCR_TEIE; /* Transfer error interrupt enable */
+    DMA1_Stream3->CR |= DMA_SxCR_DMEIE; /* Direct mode error  */
+    DMA1_Stream3->FCR |= DMA_SxFCR_FEIE; /* FiFo error  */
+
+//    DMA1_Stream3->CR |= DMA_SxCR_MBURST_0; /* Burst transfer of 4 beats*/
+//    DMA1_Stream3->CR |= DMA_SxCR_PBURST_0;
+//    DMA1_Stream3->FCR |= DMA_SxFCR_FTH_0 | DMA_SxFCR_FTH_1;
+    DMA1_Stream3->FCR &= ~(DMA_SxFCR_DMDIS);
+//    DMA1_Stream3->FCR |= DMA_SxFCR_DMDIS;
+
 
     DMA1->LIFCR = DMA_LIFCR_CTCIF3;
     DMA1->LIFCR = DMA_LIFCR_CTEIF3;
@@ -89,13 +102,10 @@ static void i2s_init_dma(void)
     DMA1_Stream3->CR |= DMA_SxCR_EN;
 }
 
+
 static void i2s_init_irt(void)
 {
-	IRQn_Type type = SPI2_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 15U);
-
-    type = DMA1_Stream3_IRQn;
+    IRQn_Type type = DMA1_Stream3_IRQn;
     NVIC_EnableIRQ(type);
     NVIC_SetPriority(type, 15U);
 }
@@ -134,6 +144,15 @@ void I2S_INIT_MIC(void)
     i2s_init_spi_reg();
     i2s_init_dma();
     i2s_start_clock();
+}
 
+void I2S_START_MIC(void)
+{
+    DMA1_Stream3->CR |= DMA_SxCR_EN;
+}
+
+void I2S_STOP_MIC(void)
+{
+    DMA1_Stream3->CR &= ~DMA_SxCR_EN;
 }
 

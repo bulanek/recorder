@@ -81,3 +81,22 @@ extern "C" bool tskma_send_to_pdm_pcm(const TaskQueuePDMPCM* const pQueueData)
     }
     return true;
 }
+
+extern "C" bool tskma_send_to_pdm_pcm_irt(const TaskQueuePDMPCM* const pQueueData)
+{
+     BaseType_t xHigherPriorityTaskWoken;
+     BaseType_t xYieldNeeded = pdTRUE;
+
+     if (f_taskService.GetTaskInfo()[TSKMA::TASK_PDM_PCM]._queueHandle == 0 || f_taskService.GetTaskInfo()[TSKMA::TASK_PDM_PCM]._taskHandle == 0)
+     {
+         return false;
+     }
+
+     xYieldNeeded = xQueueSendFromISR(f_taskService.GetTaskInfo()[TSKMA::TASK_PDM_PCM]._queueHandle, pQueueData, &xHigherPriorityTaskWoken);
+     if (xYieldNeeded == pdTRUE)
+     {
+         portYIELD();
+     }
+     return true;
+}
+

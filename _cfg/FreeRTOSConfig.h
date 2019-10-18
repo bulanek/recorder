@@ -110,5 +110,6 @@ NVIC value of 255. */
 void vAssertCalled(const char* pFileName, const int line);
 #define configASSERT(x) if((x) == 0) vAssertCalled(__FILE__, __LINE__)
 
+
 #endif /* FREERTOS_CONFIG_H */
 

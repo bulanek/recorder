@@ -7,6 +7,7 @@
 #include "trace_out.hpp"
 #include "nv_com.h"
 #include "pdmpcm_com.h"
+#include "i2s_com.h"
 
 static_assert(STRLEN_STATIC(I2S_TASK_NAME) + 1 < configMAX_TASK_NAME_LEN, "Wrong size of task name size, I2S");
 static_assert(STRLEN_STATIC(NV_TASK_NAME) + 1 < configMAX_TASK_NAME_LEN, "Wrong size of task name size, NV");
@@ -52,6 +53,14 @@ bool Service::Init(void)
                 break;
             }
         }
+        else
+        {
+            if ((retVal = i2s_init()) == false)
+            {
+                TRACE_00(TRACE_LEVEL_ERROR, "i2s init failed");
+                break;
+            }
+        }
 
         switch (mode)
         {
@@ -70,15 +79,16 @@ bool Service::Init(void)
         retVal = xTaskCreate(funcNV, NV_TASK_NAME, 1000, &_tasks[TASK_NV]._queueHandle, FLASH_TASK_PRIORITY, &_tasks[TASK_NV]._taskHandle) == pdPASS ? true : false;
         if (retVal == false) break;
 
+        retVal = (_tasks[TASK_I2S]._queueHandle = xQueueCreate(I2S_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueI2S))) == 0 ? false : true;
+        if (retVal == false) break;
+        retVal = xTaskCreate(task_i2s, I2S_TASK_NAME, 1000, &_tasks[TASK_I2S]._queueHandle, I2S_TASK_PRIORITY, &_tasks[TASK_I2S]._taskHandle) == pdPASS ? true : false;
+        if (retVal == false) break;
+
         switch (mode)
         {
         case HAL_MODE_RECORD:
         {
             TRACE_00(TRACE_LEVEL_LOG, "Start in PDM mode");
-            retVal = (_tasks[TASK_I2S]._queueHandle = xQueueCreate(I2S_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueI2S))) == 0 ? false : true;
-            if (retVal == false) break;
-            retVal = xTaskCreate(task_i2s, I2S_TASK_NAME, 1000, &_tasks[TASK_I2S]._queueHandle, I2S_TASK_PRIORITY, &_tasks[TASK_I2S]._taskHandle) == pdPASS ? true : false;
-            if (retVal == false) break;
         }
         break;
         case HAL_MODE_PDM_PCM:

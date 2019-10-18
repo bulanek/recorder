@@ -8,12 +8,12 @@ namespace I2S
 class Service
 {
 public:
+    Service();
     bool Init(void);
     bool ReceiveData(const uint16_t data);
     inline uint16_t* GetBuffer1(void) { return _bufferForDMA1; }
     inline uint16_t* GetBuffer2(void) { return _bufferForDMA2; }
-    static const uint16_t  BUFFER_SIZE_WORDS = 0x100U; /**< 1024 bytes (word=2bytes)*/
-
+    static const uint16_t  BUFFER_SIZE_WORDS = 0x500U; /**< 1024 bytes (word=2bytes)*/
 
 private:
     bool IsAboveThr(void);

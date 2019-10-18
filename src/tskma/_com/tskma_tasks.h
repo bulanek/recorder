@@ -30,8 +30,8 @@ typedef struct _TaskQueueI2S
 typedef struct _TaskQueuePDMPCM
 {
     PDMPCMOpcode    _opcode;
-    uint8_t*        _pdmDataPointer;
-    uint16_t        _sizePdmDataBytes;
+    uint16_t*        _pdmDataPointer;
+    uint16_t        _sizePdmDataWord;
 } TaskQueuePDMPCM;
 
 typedef struct _TaskQueueNV
@@ -56,10 +56,11 @@ void task_pdm_pcm(void* pParameters);
 
 void tskma_send_to_i2s_irt(const TaskQueueI2S* const pQueueData);
 bool tskma_send_to_nv_irt(const TaskQueueNV* const pQueueData);
+bool tskma_send_to_pdm_pcm_irt(const TaskQueuePDMPCM* const pQueueData);
+
 bool tskma_send_to_nv(const TaskQueueNV* const pQueueData);
 bool tskma_send_to_i2s(const TaskQueueI2S* const pQueueData);
 bool tskma_send_to_pdm_pcm(const TaskQueuePDMPCM* const pQueueData);
-
 
 
 #ifdef __cplusplus

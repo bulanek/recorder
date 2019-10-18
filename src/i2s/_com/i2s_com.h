@@ -17,7 +17,16 @@ uint16_t i2s_get_buffer_size_word(void);
 
 #ifndef I2S_INIT_MIC
 void I2S_INIT_MIC(void);
-#endif /* I2S_INIT_MIC */
+#endif
+
+#ifndef I2S_START_MIC
+void I2S_START_MIC(void);
+#endif
+
+#ifndef I2S_STOP_MIC
+void I2S_STOP_MIC(void);
+#endif
+
 
 #ifdef __cplusplus
 }

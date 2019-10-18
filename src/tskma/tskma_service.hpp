@@ -19,7 +19,7 @@ const uint16_t PDM_PCM_TASK_PRIORITY = (tskIDLE_PRIORITY + 0);
 
 
 const uint16_t I2S_TASK_QUEUE_NUM_ITEMS = 10;
-const uint16_t NV_TASK_QUEUE_NUM_ITEMS  = 10;
+const uint16_t NV_TASK_QUEUE_NUM_ITEMS  = 20;
 const uint16_t PDM_PCM_TASK_QUEUE_NUM_ITEMS  = 10;
 
 

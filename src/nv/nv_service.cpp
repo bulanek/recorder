@@ -133,6 +133,7 @@ bool Service::StartPCM(void)
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed open info file: %i", res);
             break;
         }
         UINT numReadBytes;
@@ -140,12 +141,14 @@ bool Service::StartPCM(void)
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed read info file: %i", res);
             break;
         }
 
         res = f_lseek(&_infoFile, 0);
         if (res != FR_OK)
         {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed lseek info file: %i", res);
             retVal = false;
             break;
         }
@@ -160,6 +163,7 @@ bool Service::StartPCM(void)
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed open pcm file: %i", res);
             break;
         }
         /* write header*/
@@ -169,6 +173,7 @@ bool Service::StartPCM(void)
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed write pcm file: %i", res);
             break;
         }
 
@@ -177,23 +182,25 @@ bool Service::StartPCM(void)
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed open config file: %i", res);
             break;
         }
 
         res = f_write(&_infoFile, &_configInfo, sizeof(_configInfo), &bytesWritten);
         if (res != FR_OK)
         {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed write config file: %i", res);
             retVal = false;
             break;
         }
         res = f_close(&_infoFile);
         if (res != FR_OK)
         {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed close config file: %i", res);
             retVal = false;
             break;
         }
         TRACE_01(TRACE_LEVEL_LOG, "Start of writing pcm file with index %i", _configInfo._filePCMCounter);
-
     } while (0);
     return retVal;
 }
@@ -288,14 +295,16 @@ bool Service::WritePDMRecordData(const uint16_t* const pData, const uint16_t dat
         if (res != FR_OK)
         {
             retVal = false;
+            TRACE_01(TRACE_LEVEL_ERROR, "Write failed: %i", res);
             break;
         }
-        res = f_sync(&_pdmpcmFile._FilePDM);
-        if (res != FR_OK)
-        {
-            retVal = false;
-            break;
-        }
+        //res = f_sync(&_pdmpcmFile._FilePDM);
+        //if (res != FR_OK)
+        //{
+        //    retVal = false;
+        //    TRACE_01(TRACE_LEVEL_ERROR, "Sync failed: %i", res);
+        //    break;
+        //}
     } while (0);
     return retVal;
 }
