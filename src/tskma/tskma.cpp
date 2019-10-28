@@ -46,7 +46,7 @@ extern "C" bool tskma_send_to_nv(const TaskQueueNV* const pQueueData)
     BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_NV]._queueHandle, pQueueData, (TickType_t)0);
     if (err != pdTRUE)
     {
-        TRACE_01(TRACE_LEVEL_ERROR, "Send message failure: %i", err);
+        TRACE_02(TRACE_LEVEL_ERROR, "Send message failure: %i, opcode: %i", err, pQueueData->_opcode);
         return false;
     }
     return true;

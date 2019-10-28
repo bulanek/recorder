@@ -318,11 +318,11 @@ bool Service::WritePCMRecordData(const uint16_t* const pData, const uint16_t dat
     {
         retVal = false;
     }
-    res = f_sync(&_pdmpcmFile._FilePCM);
-    if (res != FR_OK)
-    {
-        retVal = false;
-    }
+    //res = f_sync(&_pdmpcmFile._FilePCM);
+    //if (res != FR_OK)
+    //{
+    //    retVal = false;
+    //}
     return retVal;
 }
 

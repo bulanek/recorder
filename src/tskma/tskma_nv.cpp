@@ -149,12 +149,6 @@ extern "C" void task_nv_pcm(void* pParameters)
 {
     TRACE_00(TRACE_LEVEL_LOG,"Start of nv task for pcm");
     
-    if (nv_start_pcm() == false)
-    {
-        TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-        vTaskDelete(NULL);
-        return;
-    }
 
 
     //getPDMtoPCMData();
@@ -176,12 +170,15 @@ extern "C" void task_nv_pcm(void* pParameters)
                 }
                 break;
             case NV_OPCODE_WRITE_PCM_DATA:
-                if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
-                {
-                    TRACE_00(TRACE_LEVEL_ERROR, "Write pcm data failed");
-                }
+                static int counter = 0;
+                ++counter;
+                break;
+                //if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
+                //{
+                //    TRACE_00(TRACE_LEVEL_ERROR, "Write pcm data failed");
+                //}
                 //pdmpcm_push_pcm_buffer(reinterpret_cast<int16_t*>(queue._pData));
-                vPortFree(queue._pData);
+                //vPortFree(queue._pData);
                 //getPDMtoPCMData();
                 break;
             case NV_OPCODE_STOP_RESET:

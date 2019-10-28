@@ -2,7 +2,7 @@
 #define TRACE_OUT_H
 
 #include "recorder_cfg.h"
-#include <experimental/source_location>
+#include <experimental/source_location.hpp>
 #include "trace_com.h"
 
 #ifdef __cplusplus

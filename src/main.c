@@ -2,7 +2,6 @@
 #include "i2s_com.h"
 #include "nv_com.h" 
 #include "hal_com.h"
-#include "trace_com.h"
 
 #include <stdio.h>
 
@@ -18,13 +17,6 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 	function is called if a stack overflow is detected. */
 	taskDISABLE_INTERRUPTS();
 	for( ;; );
-}
-
-/** For debug purpose of FreeRTOS
-*/
-void vAssertCalled(const char* pFileName, const int line)
-{
-    while (1) {}
 }
 
 int main(void)

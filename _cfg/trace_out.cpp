@@ -3,7 +3,6 @@
 #include "trace_out.hpp"
 #include "recorder_cfg.h"
 #include "recorder_inc.h"
-#include <experimental/source_location>
 
 
 #define TRACE_FILE_NAME "trc_log.bin"

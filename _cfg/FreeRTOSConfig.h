@@ -107,8 +107,27 @@ NVIC value of 255. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void vAssertCalled(const char* pFileName, const int line);
 #define configASSERT(x) if((x) == 0) vAssertCalled(__FILE__, __LINE__)
+
+void fTraceQUEUE_SEND_FAILED(const char* pFileName, const int line, void* queue);
+#define traceQUEUE_SEND_FAILED(queue) fTraceQUEUE_SEND_FAILED(__FILE__, __LINE__, queue)
+
+void fTraceQUEUE_SEND_FROM_ISR_FAILED(const char* pFileName, const int line, void* queue);
+#define traceQUEUE_SEND_FROM_ISR_FAILED(queue) fTraceQUEUE_SEND_FROM_ISR_FAILED(__FILE__, __LINE__, queue)
+
+#define traceQUEUE_RECEIVE_FAILED(queue) {printf("Trace in %s, level error, traceQUEUE_RECEIVE_FAILED, line %i: ", __FILE__, __LINE__); printf("%i\n",queue);}
+
+#define traceQUEUE_RECEIVE_FROM_ISR_FAILED( queue) {printf("Trace in %s, level error, traceQUEUE_RECEIVE_FROM_ISR_FAILED, line %i: ", __FILE__, __LINE__); printf("%i\n",queue);}
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* FREERTOS_CONFIG_H */

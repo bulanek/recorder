@@ -5,7 +5,6 @@
 #include "trace_com.h"
 #include "trace_out.hpp"
 
-
 static void print_help(void)
 {
     printf("Debug choices:\n");
