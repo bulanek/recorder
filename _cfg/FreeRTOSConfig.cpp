@@ -42,8 +42,8 @@ void fTraceQUEUE_SEND_FAILED(const char* pFileName, const int line, void* queue)
 void fTraceQUEUE_SEND_FROM_ISR_FAILED(const char* pFileName, const int line, void* queue)
 {
 //    TRACE_01(TRACE_LEVEL_ERROR, "Queue send failed: %i", reinterpret_cast<uint32_t>(queue));
-    write("Trace in",0xFFFF); 
+    write("Trace in ",0xFFFF); 
     write((char*)pFileName, 0xFFFF);
-    write("level error, traceQUEUE_SEND_FROM_ISR_FAILED, line: ", 0xFFFF);
+    write(", level error, traceQUEUE_SEND_FROM_ISR_FAILED, line: \n", 0xFFFF);
 }
 

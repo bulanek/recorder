@@ -15,7 +15,9 @@ bool hal_init(void)
         //    break;
         //}
 
-        //SystemCoreClockUpdate();
+
+        SystemCoreClockUpdate();
+
         retVal = TRACE_INIT();
         if (retVal == false)
         {

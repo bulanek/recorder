@@ -35,11 +35,11 @@ extern "C" void task_pdm_pcm(void* pParameters)
                         TRACE_00(TRACE_LEVEL_ERROR, "failed alloc pcm buffer");
                         break;
                     }
-                    break;
-                    for (int i = 0; i < numMsPDMSamples; ++i)
-                    {
-                        pdmpcm_process(reinterpret_cast<uint8_t*>(queue._pdmDataPointer) + i * pdmSizeBytes, pPcmBuffer + i * pcmSizeWord );
-                    }
+                    //for (int i = 0; i < numMsPDMSamples; ++i)
+                    //{
+                    //    pdmpcm_process(reinterpret_cast<uint8_t*>(queue._pdmDataPointer) + i * pdmSizeBytes, pPcmBuffer + i * pcmSizeWord );
+                    //}
+                    //break;
                     TaskQueueNV nvQueue;
                     nvQueue._opcode = NV_OPCODE_WRITE_PCM_DATA;
                     nvQueue._pData = reinterpret_cast<uint16_t*>(pPcmBuffer);

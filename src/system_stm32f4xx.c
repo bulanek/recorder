@@ -64,6 +64,7 @@
   */
 
 #include "stm32f4xx.h"
+#include "recorder_cfg.h"
 
 #if !defined  (HSE_VALUE) 
   #define HSE_VALUE    ((uint32_t)8000000) /*!< Default value of the External oscillator in Hz */
@@ -132,6 +133,8 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
   * @{
   */
 
+static void SetSysClock(void);
+
 /**
   * @}
   */
@@ -149,37 +152,46 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
   */
 void SystemInit(void)
 {
-  /* FPU settings ------------------------------------------------------------*/
-  #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
-  #endif
-  /* Reset the RCC clock configuration to the default reset state ------------*/
-  /* Set HSION bit */
-  RCC->CR |= (uint32_t)0x01;
+    /* FPU settings ------------------------------------------------------------*/
+    #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+    SCB->CPACR |= ((3UL << 10 * 2) | (3UL << 11 * 2));  /* set CP10 and CP11 Full Access */
+    #endif
+    /* Reset the RCC clock configuration to the default reset state ------------*/
+    /* Set HSION bit */
+    RCC->CR |= (uint32_t)0x01;
 
-  /* Reset CFGR register */
-  RCC->CFGR = 0x00000000;
+    /* Reset CFGR register */
+    RCC->CFGR = 0x00000000;
 
-  /* Reset HSEON, CSSON and PLLON bits */
-  RCC->CR &= (uint32_t)0xFEF6FFFF;
+    /* Reset HSEON, CSSON and PLLON bits */
+    RCC->CR &= (uint32_t)~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON);//             0xFEF6FFFF;
 
-  /* Reset PLLCFGR register */
-  RCC->PLLCFGR = 0x24003010;
+    /* Reset PLLCFGR register */
+    RCC->PLLCFGR = 0x24003010;
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 174);
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLP, 2); /* -> PLLP = 6*/
+
+    SET_REGISTER_VALUE(RCC->CFGR, RCC_CFGR_PPRE1, 0b101); /* APB1 clock = AHB/4*/
 
   /* Reset HSEBYP bit */
-  RCC->CR &= (uint32_t)0xFFFBFFFF;
+    RCC->CR &= (uint32_t)0xFFFBFFFF;
 
-  /* Disable all interrupts */
-  RCC->CIR = 0x00000000;
+    /* Disable all interrupts */
+    RCC->CIR = 0x00000000;
 
-  DBGMCU->CR |= (DBGMCU_CR_DBG_SLEEP | DBGMCU_CR_DBG_STOP);
+    /* Configure the System clock source, PLL Multiplier and Divider factors,
+        AHB/APBx prescalers and Flash settings ----------------------------------*/
+    SetSysClock();
 
-  /* Configure the Vector Table location add offset address ------------------*/
-#ifdef VECT_TAB_SRAM
-  SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
-#else
-  SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
-#endif
+    DBGMCU->CR |= (DBGMCU_CR_DBG_SLEEP | DBGMCU_CR_DBG_STOP);
+
+    /* Configure the Vector Table location add offset address ------------------*/
+    #ifdef VECT_TAB_SRAM
+    SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+    #else
+    SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
+    #endif
 }
 
 /**
@@ -220,51 +232,152 @@ void SystemInit(void)
   */
 void SystemCoreClockUpdate(void)
 {
-  uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
-  
-  /* Get SYSCLK source -------------------------------------------------------*/
-  tmp = RCC->CFGR & RCC_CFGR_SWS;
+    uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
 
-  switch (tmp)
-  {
+    /* Get SYSCLK source -------------------------------------------------------*/
+    tmp = RCC->CFGR & RCC_CFGR_SWS;
+
+    switch (tmp)
+    {
     case 0x00:  /* HSI used as system clock source */
-      SystemCoreClock = HSI_VALUE;
-      break;
+        SystemCoreClock = HSI_VALUE;
+        break;
     case 0x04:  /* HSE used as system clock source */
-      SystemCoreClock = HSE_VALUE;
-      break;
+        SystemCoreClock = HSE_VALUE;
+        break;
     case 0x08:  /* PLL used as system clock source */
 
       /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
          SYSCLK = PLL_VCO / PLL_P
-         */    
-      pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
-      pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
-      
-      if (pllsource != 0)
-      {
-        /* HSE used as PLL clock source */
-        pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
-      }
-      else
-      {
-        /* HSI used as PLL clock source */
-        pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
-      }
+         */
+        pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
+        pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
 
-      pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >>16) + 1 ) *2;
-      SystemCoreClock = pllvco/pllp;
-      break;
+        uint16_t plln = (RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
+
+        if (pllsource != 0)
+        {
+            /* HSE used as PLL clock source */
+            pllvco = (HSE_VALUE / pllm) * plln;
+        }
+        else
+        {
+            /* HSI used as PLL clock source */
+            pllvco = (HSI_VALUE / pllm) * plln;
+        }
+
+        pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >> 16) + 1) * 2;
+        SystemCoreClock = pllvco / pllp;
+        break;
     default:
-      SystemCoreClock = HSI_VALUE;
-      break;
-  }
-  /* Compute HCLK frequency --------------------------------------------------*/
-  /* Get HCLK prescaler */
-  tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
-  /* HCLK frequency */
-  SystemCoreClock >>= tmp;
+        SystemCoreClock = HSI_VALUE;
+        break;
+    }
+    /* Compute HCLK frequency --------------------------------------------------*/
+    /* Get HCLK prescaler */
+    tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+    /* HCLK frequency */
+    SystemCoreClock >>= tmp;
 }
+
+#define PLL_SOURCE_HSI
+static void SetSysClock(void)
+{
+    __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+
+    /* SYSCLK, HCLK, PCLK2 and PCLK1 configuration ---------------------------*/
+    #if defined (PLL_SOURCE_HSI)
+      /* At this stage the HSI is already enabled */
+
+      /* Enable Prefetch Buffer and set Flash Latency */
+    FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_LATENCY;
+
+    /* HCLK = SYSCLK */
+    RCC->CFGR |= (uint32_t)RCC_CFGR_HPRE_DIV1;
+
+    /* PLL configuration */
+    RCC->PLLCFGR |= (uint32_t)(RCC_PLLCFGR_PLLSRC_HSI);
+
+    /* Enable PLL */
+    RCC->CR |= RCC_CR_PLLON;
+
+    /* Wait till PLL is ready */
+    while ((RCC->CR & RCC_CR_PLLRDY) == 0);
+
+    /* Select PLL as system clock source */
+    RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+    RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+
+    /* Wait till PLL is used as system clock source */
+    while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)RCC_CFGR_SWS_PLL);
+    #else
+    #if defined (PLL_SOURCE_HSE)
+     /* Enable HSE */
+    RCC->CR |= ((uint32_t)RCC_CR_HSEON);
+    #elif defined (PLL_SOURCE_HSE_BYPASS)
+     /* HSE oscillator bypassed with external clock */
+    RCC->CR |= (uint32_t)(RCC_CR_HSEON | RCC_CR_HSEBYP);
+    #endif /* PLL_SOURCE_HSE */
+
+    /* Wait till HSE is ready and if Time out is reached exit */
+    do
+    {
+        HSEStatus = RCC->CR & RCC_CR_HSERDY;
+        StartUpCounter++;
+    } while ((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+
+    if ((RCC->CR & RCC_CR_HSERDY) != RESET)
+    {
+        HSEStatus = (uint32_t)0x01;
+    }
+    else
+    {
+        HSEStatus = (uint32_t)0x00;
+    }
+
+    if (HSEStatus == (uint32_t)0x01)
+    {
+        /* Enable Prefetch Buffer and set Flash Latency */
+        FLASH->ACR = FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY_1;
+
+        /* HCLK = SYSCLK */
+        RCC->CFGR |= (uint32_t)RCC_CFGR_HPRE_DIV1;
+
+        /* PCLK2 = HCLK */
+        RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE2_DIV1;
+
+        /* PCLK1 = HCLK */
+        RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE1_DIV2;
+
+
+        /*  PLL configuration: PLLCLK = HSE * 9 = 72 MHz */
+        RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE |
+            RCC_CFGR_PLLMULL));
+        RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_PREDIV1 | RCC_CFGR_PLLMULL9);
+        /* Enable PLL */
+        RCC->CR |= RCC_CR_PLLON;
+
+        /* Wait till PLL is ready */
+        while ((RCC->CR & RCC_CR_PLLRDY) == 0)
+        {
+        }
+
+        /* Select PLL as system clock source */
+        RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+        RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+
+        /* Wait till PLL is used as system clock source */
+        while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)RCC_CFGR_SWS_PLL)
+        {
+        }
+    }
+    else
+    { /* If HSE fails to start-up, the application will have wrong clock
+           configuration. User can add here some code to deal with this error */
+    }
+    #endif /* PLL_SOURCE_HSI */  
+}
+
 
 /**
   * @}

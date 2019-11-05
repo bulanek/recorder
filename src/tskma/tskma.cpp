@@ -13,26 +13,26 @@ extern "C" bool tskma_initialize(void)
     return retVal;
 }
 
-extern "C" void tskma_send_to_i2s_irt(const TaskQueueI2S* const pQueueData)
+extern "C" void tskma_send_to_uart_irt(const TaskQueueUART* const pQueueData)
 {
      BaseType_t xHigherPriorityTaskWoken;
      BaseType_t xYieldNeeded = pdTRUE;
 
-     if (f_taskService.GetTaskInfo()[TSKMA::TASK_I2S]._queueHandle == 0 || f_taskService.GetTaskInfo()[TSKMA::TASK_I2S]._taskHandle == 0)
+     if (f_taskService.GetTaskInfo()[TSKMA::TASK_UART]._queueHandle == 0 || f_taskService.GetTaskInfo()[TSKMA::TASK_UART]._taskHandle == 0)
      {
          return;
      }
 
-     xYieldNeeded = xTaskResumeFromISR(f_taskService.GetTaskInfo()[TSKMA::TASK_I2S]._taskHandle);
+     xYieldNeeded = xTaskResumeFromISR(f_taskService.GetTaskInfo()[TSKMA::TASK_UART]._taskHandle);
      if (xYieldNeeded == pdTRUE)
      {
          portYIELD();
      }
 }
 
-extern "C" bool tskma_send_to_i2s(const TaskQueueI2S* const pQueueData)
+extern "C" bool tskma_send_to_uart(const TaskQueueUART* const pQueueData)
 {
-    BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_I2S]._queueHandle, pQueueData, (TickType_t)0);
+    BaseType_t err = xQueueSend(f_taskService.GetTaskInfo()[TSKMA::TASK_UART]._queueHandle, pQueueData, (TickType_t)0);
     if (err != pdTRUE)
     {
         TRACE_01(TRACE_LEVEL_ERROR, "Send message failure: %i", err);
@@ -100,3 +100,7 @@ extern "C" bool tskma_send_to_pdm_pcm_irt(const TaskQueuePDMPCM* const pQueueDat
      return true;
 }
 
+extern "C" TaskHandle_t tskma_get_uart_task_handle(void)
+{
+    return f_taskService.GetTaskInfo()[TSKMA::TASK_UART]._taskHandle;
+}

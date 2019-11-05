@@ -29,21 +29,9 @@
 /******************************************************************************/
 
 #include "recorder_inc.h"
-
 #include "tskma_tasks.h"
 #include "i2s_com.h"
 
-/// I2S interrupt
-extern "C" void SPI2_IRQHandler(void)
-{
-    TaskQueueI2S queue;
-    queue._data = (uint16_t)SPI2->DR;
-    static int counter = 0;
-    if (counter++ % 10000 == 0)
-    {
-        tskma_send_to_i2s_irt(&queue);
-    }
-}
 
 extern "C" void EXTI0_IRQHandler(void)
 {
@@ -60,34 +48,23 @@ extern "C" void EXTI0_IRQHandler(void)
 
 extern "C" void DMA1_Stream3_IRQHandler(void)
 {
-    static int counter = 0;
-    static int counterTE = 0;
-    static int counterDME = 0;
-    static int counterFE = 0;
-    static volatile DMA_TypeDef* dma1 = DMA1;
-    static volatile DMA_Stream_TypeDef* pStreamInt = DMA1_Stream3;
-    //NVIC_ClearPendingIRQ(DMA1_Stream3_IRQn);
     if ((DMA1->LISR & DMA_LISR_TCIF3) != 0)
     {
         DMA1->LIFCR = DMA_LIFCR_CTCIF3;
-        ++counter;
     }
     if ((DMA1->LISR & DMA_LISR_TEIF3) != 0 || DMA1->LISR & DMA_LISR_DMEIF3)
     {
         if ((DMA1->LISR & DMA_LISR_TEIF3) != 0)
         {
             DMA1->LIFCR = DMA_LIFCR_CTEIF3;
-            ++counterTE;
         }
         if ((DMA1->LISR & DMA_LISR_DMEIF3) != 0)
         {
             DMA1->LIFCR = DMA_LIFCR_CDMEIF3;
-            ++counterDME;
         }
         if ((DMA1->LISR & DMA_LISR_FEIF3) != 0)
         {
             DMA1->LIFCR = DMA_LIFCR_CFEIF3;
-            ++counterFE;
         }
         return;
     }
@@ -103,8 +80,18 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
 
     TaskQueuePDMPCM taskQueuePdmPcm;
     taskQueuePdmPcm._pdmDataPointer = pData;
-    taskQueuePdmPcm._sizePdmDataWord = i2s_get_buffer_size_word() ;
+    taskQueuePdmPcm._sizePdmDataWord = i2s_get_buffer_size_word();
     taskQueuePdmPcm._opcode = PDM_PCM_GET_PCM_DATA;
     tskma_send_to_pdm_pcm_irt(&taskQueuePdmPcm);
+}
+
+extern "C" void USART2_IRQHandler(void)
+{
+    TaskHandle_t uartTaskHandle = tskma_get_uart_task_handle();
+    BaseType_t xYieldRequired = xTaskResumeFromISR(uartTaskHandle);
+    // We should switch context so the ISR returns to a different task.
+    // NOTE:  How this is done depends on the port you are using.  Check
+    // the documentation and examples for your port.
+    portYIELD_FROM_ISR(xYieldRequired);
 }
 

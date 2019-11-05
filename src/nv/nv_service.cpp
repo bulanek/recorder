@@ -177,15 +177,6 @@ bool Service::StartPCM(void)
             break;
         }
 
-        SetFileName(PDM, _configInfo._filePCMCounter);
-        res = f_open(&_pdmpcmFile._FilePDM, _pdmpcmFile._fileNamePDM, FA_READ);
-        if (res != FR_OK)
-        {
-            retVal = false;
-            TRACE_01(TRACE_LEVEL_ERROR, "Failed open config file: %i", res);
-            break;
-        }
-
         res = f_write(&_infoFile, &_configInfo, sizeof(_configInfo), &bytesWritten);
         if (res != FR_OK)
         {

@@ -148,10 +148,6 @@ extern "C" void task_nv(void* pParameters)
 extern "C" void task_nv_pcm(void* pParameters)
 {
     TRACE_00(TRACE_LEVEL_LOG,"Start of nv task for pcm");
-    
-
-
-    //getPDMtoPCMData();
 
     TaskQueueNV queue;
     QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;

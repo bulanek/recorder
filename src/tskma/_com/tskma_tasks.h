@@ -21,11 +21,18 @@ typedef enum
     NV_OPCODE_STOP_RESET
 } NVOpcode;
 
-
-typedef struct _TaskQueueI2S
+typedef enum
 {
-    uint16_t        _data;
-} TaskQueueI2S;
+    UART_RCV,
+    UART_TR
+} UARTOpcode;
+
+typedef struct _TaskQueueUART
+{
+    uint8_t*        _data;
+    uint16_t        _dataLength;
+    UARTOpcode       _opcode;
+} TaskQueueUART;
 
 typedef struct _TaskQueuePDMPCM
 {
@@ -48,19 +55,21 @@ extern "C"
 
 bool tskma_initialize(void);
 
-void task_i2s(void* pParameters);
+void task_uart(void* pParameters);
 void task_nv(void* pParameters);
 void task_nv_pcm(void* pParameters);
 void task_pdm_pcm(void* pParameters);
 
 
-void tskma_send_to_i2s_irt(const TaskQueueI2S* const pQueueData);
+void tskma_send_to_uart_irt(const TaskQueueUART* const pQueueData);
 bool tskma_send_to_nv_irt(const TaskQueueNV* const pQueueData);
 bool tskma_send_to_pdm_pcm_irt(const TaskQueuePDMPCM* const pQueueData);
 
 bool tskma_send_to_nv(const TaskQueueNV* const pQueueData);
-bool tskma_send_to_i2s(const TaskQueueI2S* const pQueueData);
+bool tskma_send_to_uart(const TaskQueueUART* const pQueueData);
 bool tskma_send_to_pdm_pcm(const TaskQueuePDMPCM* const pQueueData);
+
+TaskHandle_t tskma_get_uart_task_handle(void);
 
 
 #ifdef __cplusplus

@@ -1342,7 +1342,6 @@ Queue_t * const pxQueue = xQueue;
 					/* The queue was empty and no block time is specified (or
 					the block time has expired) so leave now. */
 					taskEXIT_CRITICAL();
-					traceQUEUE_RECEIVE_FAILED( pxQueue );
 					return errQUEUE_EMPTY;
 				}
 				else if( xEntryTimeSet == pdFALSE )

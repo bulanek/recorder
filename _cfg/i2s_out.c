@@ -9,9 +9,6 @@ static void i2s_init_gpio(void)
         WS - PB12,
         SD - PB15 */
 
-    uint32_t testAHB1 = RCC->AHB1ENR;
-    uint32_t testPointerVal = (uint32_t)(&RCC->AHB1ENR);
-    unsigned long rccReg = (unsigned long)RCC;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN;
 
     unsigned long gpiobReg = (unsigned long)(GPIOB);
@@ -115,6 +112,8 @@ static void i2s_init_clock(void)
     // Disable clock
     RCC->CR &= ~RCC_CR_PLLI2SON;
     RCC->CR &= ~RCC_CR_PLLON;
+
+
     // STM32f041 reference note 105: VCO=PLL_input_f/PLLM; VCO in <1,2>MHz
 	//                                 recommended 2MHz to suppress jitter.
     // for 16 MHz PLLM = 8  to VCO_in = 2 MHz

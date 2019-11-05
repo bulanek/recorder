@@ -2,6 +2,7 @@
 #include "hal.h"
 #include "recorder_inc.h"
 #include "rtc_stm32f4.h"
+#include "tskma_tasks.h"
 
 void HAL_ASSERT(bool condition)
 {
@@ -46,16 +47,22 @@ void HAL_INIT_CONFIG_UART(void)
 
     //enable uart
     USART2->CR1 |= USART_CR1_UE;
-    /*USARDIV = 16 MHz / (required UART clock * 8x (2-OVER8))*/
-    USART2->BRR = 0x08B; /* 8.6875 -> Mantisa(USARDIV)=8 <4 | Fraction*16 (0.6875*16 = 11)/
-    USART2->
+    /*USARDIV = 16 MHz / (required UART clock * 8x (2-OVER8))  OVER8 = 0*/
+    /* UPDATE FREQ!  fr 14.5 MHz -> value USARDIV = 7.8668 ->  Mantisa = 7, Fraction*16 = 14 */
+    USART2->BRR = 0x07E; /* 8.6875 -> Mantisa(USARDIV)=8 <4 | Fraction*16 (0.6875*16 = 11)/
+
     /* Configure USART1 */
     /* 8 data bit, 1 start bit, 1 stop bit; no parity; transmit enable;
      * over-sampling 16 */
     USART2->CR1 |= USART_CR1_TE | USART_CR1_RE ;
+    USART2->CR1 |= USART_CR1_RXNEIE; /* Enable rx interrupt*/
+
+    IRQn_Type type = USART2_IRQn;
+    NVIC_EnableIRQ(type);
+    NVIC_SetPriority(type, 15U);
+
     while ((USART2->SR & USART_SR_TC) == 0);
 }
-
 
 int _read(int file, char *pData, int len)
 {
@@ -71,22 +78,20 @@ int _read(int file, char *pData, int len)
 
 int _write(int file, char *pData, int len)
 {
-    taskENTER_CRITICAL();
-    char* pTmpData = pData;
-    int bytes_written;
-    for (bytes_written = 0; bytes_written < len; ++bytes_written)
+    uint8_t* pDataSend = pvPortMalloc(len);
+    if (pDataSend == NULL)
     {
-        while ((USART2->SR & USART_SR_TXE) == 0U);
-        volatile uint8_t data = pTmpData[bytes_written];
-        USART2->DR = data;
-        if (pTmpData[bytes_written] == '\n')
-        {
-            while ((USART2->SR & USART_SR_TXE) == 0U);
-            USART2->DR = '\r';
-            break;
-        }
+        return 0;
     }
-    taskEXIT_CRITICAL();
+    memcpy(pDataSend, pData, len);
+
+    TaskQueueUART taskQueue;
+    taskQueue._data = pDataSend;
+    taskQueue._dataLength = len;
+    taskQueue._opcode = UART_TR;
+
+    tskma_send_to_uart_irt(&taskQueue);
+
     return len;
 }
 

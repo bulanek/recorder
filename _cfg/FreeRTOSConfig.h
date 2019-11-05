@@ -121,9 +121,9 @@ void fTraceQUEUE_SEND_FAILED(const char* pFileName, const int line, void* queue)
 void fTraceQUEUE_SEND_FROM_ISR_FAILED(const char* pFileName, const int line, void* queue);
 #define traceQUEUE_SEND_FROM_ISR_FAILED(queue) fTraceQUEUE_SEND_FROM_ISR_FAILED(__FILE__, __LINE__, queue)
 
-#define traceQUEUE_RECEIVE_FAILED(queue) {printf("Trace in %s, level error, traceQUEUE_RECEIVE_FAILED, line %i: ", __FILE__, __LINE__); printf("%i\n",queue);}
+#define traceQUEUE_RECEIVE_FAILED(queue) {printf("Trace in %s, level error, traceQUEUE_RECEIVE_FAILED, line %i: \n", __FILE__, __LINE__); }
 
-#define traceQUEUE_RECEIVE_FROM_ISR_FAILED( queue) {printf("Trace in %s, level error, traceQUEUE_RECEIVE_FROM_ISR_FAILED, line %i: ", __FILE__, __LINE__); printf("%i\n",queue);}
+#define traceQUEUE_RECEIVE_FROM_ISR_FAILED( queue) 
 
 #ifdef __cplusplus
 }
