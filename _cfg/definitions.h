@@ -81,7 +81,7 @@
 #define BLOCK_SIZE 512
 
 
-#define ASSERT
+#define ASSERT while(1){}
 
 
 typedef enum{

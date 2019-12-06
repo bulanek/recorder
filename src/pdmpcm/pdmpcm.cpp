@@ -43,14 +43,15 @@ bool pdmpcm_init(void)
     return retVal;
 }
 
-void pdmpcm_process( const uint8_t* const pDataPDMIn, int16_t* pDataPCMOut)
+void pdmpcm_process( const uint8_t* const pDataPDMIn, int16_t* pDataPCMOut, uint16_t numSamples)
 {
+    f_filter.nSamples = numSamples;
     Open_PDM_Filter_64((uint8_t *) pDataPDMIn, pDataPCMOut, f_gain, &f_filter);
 }
 
-uint16_t pdmpcm_get_pdm_size_in_bytes(void)
+uint16_t pdmpcm_get_pdm_size_in_word(void)
 {
-    return f_pdmBufLenWord*2;
+    return f_pdmBufLenWord;
 }
 uint16_t pdmpcm_get_pcm_size_in_word(void)
 {

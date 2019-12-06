@@ -14,8 +14,6 @@ typedef enum
     NV_PDM_STOP,
     NV_PCM_START,
     NV_PCM_STOP,
-    NV_OPCODE_WRITE_PDM,
-    NV_OPCODE_WRITE_PCM,
     NV_OPCODE_GET_PDM_DATA,
     NV_OPCODE_WRITE_PCM_DATA,
     NV_OPCODE_STOP_RESET
@@ -61,7 +59,7 @@ void task_nv_pcm(void* pParameters);
 void task_pdm_pcm(void* pParameters);
 
 
-void tskma_send_to_uart_irt(const TaskQueueUART* const pQueueData);
+bool tskma_send_to_uart_irt(const TaskQueueUART* const pQueueData);
 bool tskma_send_to_nv_irt(const TaskQueueNV* const pQueueData);
 bool tskma_send_to_pdm_pcm_irt(const TaskQueuePDMPCM* const pQueueData);
 
@@ -70,6 +68,7 @@ bool tskma_send_to_uart(const TaskQueueUART* const pQueueData);
 bool tskma_send_to_pdm_pcm(const TaskQueuePDMPCM* const pQueueData);
 
 TaskHandle_t tskma_get_uart_task_handle(void);
+TaskHandle_t tskma_get_nv_task_handle(void);
 
 
 #ifdef __cplusplus

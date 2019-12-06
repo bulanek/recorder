@@ -17,7 +17,6 @@ void timerf13Calback(TimerHandle_t xTimer)
     disk_timerproc();
 }
 
-
 namespace TSKMA
 {
 bool Service::Init(void)
@@ -73,12 +72,12 @@ bool Service::Init(void)
             retVal = false;
         }
 
-        if (nv_start_pcm() == false)
-        {
-            TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-            retVal = false;
-            break;
-        }
+        //if (nv_start_pcm() == false)
+        //{
+        //    TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
+        //    retVal = false;
+        //    break;
+        //}
 
         retVal = (_tasks[TASK_NV]._queueHandle = xQueueCreate(NV_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueNV))) == 0 ? false : true;
         if (retVal == false) break;

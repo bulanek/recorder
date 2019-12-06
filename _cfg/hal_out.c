@@ -90,7 +90,10 @@ int _write(int file, char *pData, int len)
     taskQueue._dataLength = len;
     taskQueue._opcode = UART_TR;
 
-    tskma_send_to_uart_irt(&taskQueue);
+    if (tskma_send_to_uart(&taskQueue) == false)
+    {
+        return 0;
+    }
 
     return len;
 }

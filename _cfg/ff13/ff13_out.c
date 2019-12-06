@@ -11,6 +11,7 @@
 #include "recorder_inc.h"
 #include "../rtc_stm32f4.h"
 #include "nv_com.h"
+#include "tskma_tasks.h"
 
 #define SPI_CH	3	/* SPI channel to use = 1: SPI1, 11: SPI1/remap, 2: SPI2 */
 
@@ -157,12 +158,40 @@ BYTE CardType;			/* Card type flags */
 /* SPI controls (Platform dependent)                                     */
 /*-----------------------------------------------------------------------*/
 
+#ifdef FF13_DMA
+static void init_spi_dma(void)
+{
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+
+    DMA1_Stream7->CR &= ~DMA_SxCR_EN;
+    while((DMA1_Stream7->CR & DMA_SxCR_EN) != 0);
+
+    DMA1_Stream7->PAR = &(SPI3->DR);
+
+    DMA1_Stream7->CR &= ~(DMA_SxCR_CHSEL);  /* Channel 0 (SPI3_Tx) */
+    DMA1_Stream7->CR |= DMA_SxCR_DIR_0; /* Memory-to-peripheral*/
+
+    DMA1_Stream7->CR &= DMA_SxCR_MSIZE; /* 8 bit size of memory */
+    DMA1_Stream7->CR &= DMA_SxCR_PSIZE; /* 8 bit size of peripheral. */
+
+    DMA1_Stream7->CR |= DMA_SxCR_TCIE; /*  Transfer complete interrupt enable */
+    DMA1_Stream7->CR |= DMA_SxCR_TEIE; /* Transfer error interrupt enable */
+    DMA1_Stream7->CR |= DMA_SxCR_DMEIE; /* Direct mode error  */
+    DMA1_Stream7->FCR |= DMA_SxFCR_FEIE; /* FiFo error  */
+
+    DMA1->HIFCR |= DMA_HIFCR_CTCIF7;
+    DMA1->HIFCR |= DMA_HIFCR_CTEIF7;
+}
+#endif /* FF13_DMA */
+
 /* Initialize MMC interface */
-static
-void init_spi (void)
+static void init_spi (void)
 {
 	SPIxENABLE();		/* Enable SPI function */
 	CS_HIGH();			/* Set CS# high */
+	#ifdef FF13_DMA
+	init_spi_dma();
+	#endif
 
 //	for (Timer1 = 10; Timer1; ) ;	/* 10ms */
 }
@@ -189,7 +218,6 @@ void rcvr_spi_multi (
 {
 	WORD d;
 
-
 	SPIx_CR1 &= ~_BV(6);
 	SPIx_CR1 |= (_BV(6) | _BV(11));	/* Put SPI into 16-bit mode */
 
@@ -212,9 +240,50 @@ void rcvr_spi_multi (
 
 
 #if FF_FS_READONLY == 0
+
+#ifdef FF13_DMA
+void DMA1_Stream7_IRQHandler(void)
+{
+    if ((DMA1->HISR & DMA_HISR_TCIF7) != 0)
+    {
+        DMA1->HIFCR = DMA_HIFCR_CTCIF7;
+    }
+    if ((DMA1->HISR & DMA_HISR_TEIF7) != 0 || DMA1->HISR & DMA_HISR_DMEIF7)
+    {
+        if ((DMA1->HISR & DMA_HISR_TEIF7) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CTEIF7;
+        }
+        if ((DMA1->HISR & DMA_HISR_DMEIF7) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CDMEIF7;
+        }
+        if ((DMA1->HISR & DMA_HISR_FEIF7) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CFEIF7;
+        }
+        return;
+    }
+    vTaskResume(tskma_get_nv_task_handle());
+}
+#endif /* FF13_DMA */
+
+#ifdef FF13_DMA
+static void xmit_spi_multi(
+	const BYTE *buff,	/* Pointer to the data */
+	UINT btx			/* Number of bytes to send (even number) */
+)
+{
+    DMA1_Stream7->M0AR = (uint32_t)buff;
+    DMA1_Stream7->NDTR = btx;
+    DMA1_Stream7->CR |= DMA_SxCR_EN;
+
+    vTaskSuspend(tskma_get_nv_task_handle());
+	SPIx_DR;							/* Discard received word */
+}
+#else
 /* Send multiple byte */
-static
-void xmit_spi_multi (
+static void xmit_spi_multi (
 	const BYTE *buff,	/* Pointer to the data */
 	UINT btx			/* Number of bytes to send (even number) */
 )
@@ -240,7 +309,9 @@ void xmit_spi_multi (
 	SPIx_CR1 &= ~(_BV(6) | _BV(11));	/* Put SPI into 8-bit mode */
 	SPIx_CR1 |= _BV(6);
 }
-#endif
+#endif /* FF13_DMA */
+#endif /* #if FF_FS_READONLY == 0 */
+
 
 
 /*-----------------------------------------------------------------------*/

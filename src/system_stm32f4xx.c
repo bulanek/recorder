@@ -164,7 +164,7 @@ void SystemInit(void)
     RCC->CFGR = 0x00000000;
 
     /* Reset HSEON, CSSON and PLLON bits */
-    RCC->CR &= (uint32_t)~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON);//             0xFEF6FFFF;
+    RCC->CR &= (uint32_t)~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON);//             
 
     /* Reset PLLCFGR register */
     RCC->PLLCFGR = 0x24003010;

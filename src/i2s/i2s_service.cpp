@@ -29,32 +29,32 @@ bool Service::ReceiveData(const uint16_t data)
     ++_bufferPosition;
     do
     {
-        if (_bufferPosition >= BUFFER_SIZE_WORDS)
-        {
-            _bufferPosition = 0;
-            //if (this->IsAboveThr() == true)
-            //{
-            //uint16_t* pData = (uint16_t*)pvPortMalloc(BUFFER_SIZE_WORDS * 2);
-            uint16_t pData[BUFFER_SIZE_WORDS];
-            if (pData == nullptr)
-            {
-                retVal = false;
-                TRACE_00(TRACE_LEVEL_ERROR, "Failed to allocate memory for data");
-                break;
-            }
-            memcpy(pData, _bufferI2S, BUFFER_SIZE_WORDS * 2);
-            TaskQueueNV taskQueue;
-            taskQueue._pData = pData;
-            taskQueue._dataLengthBytes = BUFFER_SIZE_WORDS * 2;
-            taskQueue._opcode = NV_OPCODE_WRITE_PDM;
-            nv_write_pdm_record_data(pData, BUFFER_SIZE_WORDS * 2);
-            //if ((retVal = tskma_send_to_nv(&taskQueue)) != true)
-            //{
-            //    TRACE_00(TRACE_LEVEL_ERROR, "Failed to send data to nv task");
-            //    break;
-            //}
-            //}
-        }
+        //if (_bufferPosition >= BUFFER_SIZE_WORDS)
+        //{
+        //    _bufferPosition = 0;
+        //    //if (this->IsAboveThr() == true)
+        //    //{
+        //    //uint16_t* pData = (uint16_t*)pvPortMalloc(BUFFER_SIZE_WORDS * 2);
+        //    uint16_t pData[BUFFER_SIZE_WORDS];
+        //    if (pData == nullptr)
+        //    {
+        //        retVal = false;
+        //        TRACE_00(TRACE_LEVEL_ERROR, "Failed to allocate memory for data");
+        //        break;
+        //    }
+        //    memcpy(pData, _bufferI2S, BUFFER_SIZE_WORDS * 2);
+        //    TaskQueueNV taskQueue;
+        //    taskQueue._pData = pData;
+        //    taskQueue._dataLengthBytes = BUFFER_SIZE_WORDS * 2;
+        //    taskQueue._opcode = NV_OPCODE_WRITE_PDM;
+        //    nv_write_pdm_record_data(pData, BUFFER_SIZE_WORDS * 2);
+        //    //if ((retVal = tskma_send_to_nv(&taskQueue)) != true)
+        //    //{
+        //    //    TRACE_00(TRACE_LEVEL_ERROR, "Failed to send data to nv task");
+        //    //    break;
+        //    //}
+        //    //}
+        //}
     } while (0);
     return retVal;
 }

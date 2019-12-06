@@ -11,7 +11,7 @@ static void task_nv_common(void* pParameters)
 {
     TaskQueueNV queue;
     QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;
-    TickType_t xTicksToWait = 0;
+    TickType_t xTicksToWait = portMAX_DELAY;
     TRACE_00(TRACE_LEVEL_LOG, "Start nv common");
 
     for (;; )
@@ -48,21 +48,12 @@ static void task_nv_common(void* pParameters)
                     TRACE_00(TRACE_LEVEL_ERROR, "Stop nv pcm failed");
                 }
                 break;
-            case NV_OPCODE_WRITE_PDM:
-            {
-                if (nv_write_pdm_record_data(queue._pData, queue._dataLengthBytes) == false)
-                {
-                    TRACE_00(TRACE_LEVEL_WARN, "Write record pdm data failed");
-                }
-                break;
-            }
-            case NV_OPCODE_WRITE_PCM:
+            case NV_OPCODE_WRITE_PCM_DATA:
             {
                 if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
                 {
                     TRACE_00(TRACE_LEVEL_WARN, "Write record pcm data failed");
                 }
-                vPortFree(queue._pData);
                 break;
             }
             case NV_OPCODE_STOP_RESET:
@@ -84,12 +75,12 @@ extern "C" void task_nv(void* pParameters)
 {
 
     TRACE_00(TRACE_LEVEL_LOG, "Start of nv task");
-    if (nv_start_pdm() == false)
-    {
-        TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-        vTaskDelete(NULL);
-    	return;
-    }
+    //if (nv_start_pdm() == false)
+    //{
+    //    TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
+    //    vTaskDelete(NULL);
+    //	return;
+    //}
 
     task_nv_common(pParameters);
 }
@@ -103,7 +94,7 @@ extern "C" void task_nv(void* pParameters)
 //        TaskQueuePDMPCM queuePDMPCM;
 //        queuePDMPCM._opcode = PDM_PCM_GET_PCM_DATA;
 //        queuePDMPCM._pdmDataPointer = pdmpcm_pop_pdm_buffer();
-//        queuePDMPCM._sizePdmDataWord = pdmpcm_get_pdm_size_in_bytes();
+//        queuePDMPCM._sizePdmDataWord = pdmpcm_get_pdm_size_in_word();
 //        uint16_t numReadBytes;
 //        if (queuePDMPCM._pdmDataPointer == NULL)
 //        {
@@ -151,7 +142,7 @@ extern "C" void task_nv_pcm(void* pParameters)
 
     TaskQueueNV queue;
     QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;
-    TickType_t xTicksToWait = 0;
+    TickType_t xTicksToWait = portMAX_DELAY;
 
     for (;; )
     {

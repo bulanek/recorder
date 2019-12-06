@@ -50,6 +50,11 @@ add_definitions("-DSTM32F4")
 add_definitions("-DSTM32F401xx")
 add_definitions("-DSTM32F401RETx")
 add_definitions("-DNUCLEO_F401RE")
+if (DEFINED FF13_DMA)
+add_definitions("-DFF13_DMA")
+message(STATUS "FF13 write using DMA: ON")
+endif()
+
 
 add_compile_options(
         -mcpu=cortex-m4

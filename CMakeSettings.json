@@ -28,6 +28,11 @@
           "type": "STRING"
         },
         {
+          "name": "FF13_DMA",
+          "value": "ON",
+          "type": "STRING"
+        },
+        {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:/UserData/z003tecs/Documents/programs/recorder/cmake/Toolchain-arm-eabi-gcc.cmake",
           "type": "UNINITIALIZED"

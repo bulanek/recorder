@@ -91,8 +91,8 @@ static void i2s_init_dma(void)
 //    DMA1_Stream3->FCR |= DMA_SxFCR_DMDIS;
 
 
-    DMA1->LIFCR = DMA_LIFCR_CTCIF3;
-    DMA1->LIFCR = DMA_LIFCR_CTEIF3;
+    DMA1->LIFCR |= DMA_LIFCR_CTCIF3;
+    DMA1->LIFCR |= DMA_LIFCR_CTEIF3;
 
     unsigned long which = (unsigned long)DMA1_Stream3;
     volatile DMA_Stream_TypeDef* pStream = DMA1_Stream3;
@@ -116,11 +116,11 @@ static void i2s_init_clock(void)
 
     // STM32f041 reference note 105: VCO=PLL_input_f/PLLM; VCO in <1,2>MHz
 	//                                 recommended 2MHz to suppress jitter.
-    // for 16 MHz PLLM = 8  to VCO_in = 2 MHz
-    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
+    //// for 16 MHz PLLM = 8  to VCO_in = 2 MHz
+    //SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
 
-    // for VCO_out = 432 MHz
-    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 216);
+    //// for VCO_out = 432 MHz
+    //SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 216);
 
     // see reference note 590: table for PLLI2SN PLLI2SR
 	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 424);
@@ -147,11 +147,16 @@ void I2S_INIT_MIC(void)
 
 void I2S_START_MIC(void)
 {
+    vPortEnterCritical();
     DMA1_Stream3->CR |= DMA_SxCR_EN;
+    vPortExitCritical();
+
 }
 
 void I2S_STOP_MIC(void)
 {
+    vPortEnterCritical();
     DMA1_Stream3->CR &= ~DMA_SxCR_EN;
+    vPortExitCritical();
 }
 

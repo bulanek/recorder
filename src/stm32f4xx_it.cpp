@@ -48,6 +48,10 @@ extern "C" void EXTI0_IRQHandler(void)
 
 extern "C" void DMA1_Stream3_IRQHandler(void)
 {
+    static TickType_t ticks = xTaskGetTickCount();
+    TickType_t difference = xTaskGetTickCount() - ticks;
+    ticks = xTaskGetTickCount();
+
     if ((DMA1->LISR & DMA_LISR_TCIF3) != 0)
     {
         DMA1->LIFCR = DMA_LIFCR_CTCIF3;
@@ -85,13 +89,21 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
     tskma_send_to_pdm_pcm_irt(&taskQueuePdmPcm);
 }
 
+
+static char dataChar;
 extern "C" void USART2_IRQHandler(void)
 {
     TaskHandle_t uartTaskHandle = tskma_get_uart_task_handle();
-    BaseType_t xYieldRequired = xTaskResumeFromISR(uartTaskHandle);
+    TaskQueueUART uartQueue;
+    uartQueue._opcode = UART_RCV;
+    dataChar = (char)USART2->DR;
+
+    uartQueue._data = reinterpret_cast<uint8_t*>(&dataChar);
+    tskma_send_to_uart_irt(&uartQueue);
+    //BaseType_t xYieldRequired = xTaskResumeFromISR(uartTaskHandle);
     // We should switch context so the ISR returns to a different task.
     // NOTE:  How this is done depends on the port you are using.  Check
     // the documentation and examples for your port.
-    portYIELD_FROM_ISR(xYieldRequired);
+    //portYIELD_FROM_ISR(xYieldRequired);
 }
 
