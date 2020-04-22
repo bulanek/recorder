@@ -39,11 +39,6 @@ bool Service::Init(void)
             break;
         }
 
-        if ((retVal = nv_init()) == false)
-        {
-            TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-            break;;
-        }
 
         if ((retVal = pdmpcm_init()) != true)
         {
@@ -60,38 +55,15 @@ bool Service::Init(void)
             }
         }
 
-        switch (mode)
-        {
-        case HAL_MODE_RECORD:
-            break;
-        case HAL_MODE_PDM_PCM:
-            funcNV = task_nv_pcm;
-            break;
-        default:
-            TRACE_00(TRACE_LEVEL_ERROR, "Unexpected mode");
-            retVal = false;
-        }
-
-        //if (nv_start_pcm() == false)
-        //{
-        //    TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-        //    retVal = false;
-        //    break;
-        //}
-
-        retVal = (_tasks[TASK_NV]._queueHandle = xQueueCreate(NV_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueNV))) == 0 ? false : true;
-        if (retVal == false) break;
-        retVal = xTaskCreate(funcNV, NV_TASK_NAME, 1000, &_tasks[TASK_NV]._queueHandle, FLASH_TASK_PRIORITY, &_tasks[TASK_NV]._taskHandle) == pdPASS ? true : false;
-        if (retVal == false) break;
-
         retVal = (_tasks[TASK_UART]._queueHandle = xQueueCreate(UART_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueUART))) == 0 ? false : true;
         if (retVal == false) break;
         retVal = xTaskCreate(task_uart, UART_TASK_NAME, 1000, &_tasks[TASK_UART]._queueHandle, UART_TASK_PRIORITY, &_tasks[TASK_UART]._taskHandle) == pdPASS ? true : false;
         if (retVal == false) break;
 
-        retVal = (_tasks[TASK_PDM_PCM]._queueHandle = xQueueCreate(PDM_PCM_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueuePDMPCM))) == 0 ? false : true;
+
+        retVal = (_tasks[TASK_NV]._queueHandle = xQueueCreate(NV_TASK_QUEUE_NUM_ITEMS, sizeof(TaskQueueNV))) == 0 ? false : true;
         if (retVal == false) break;
-        retVal = xTaskCreate(task_pdm_pcm, PDM_PCM_TASK_NAME, 1000, &_tasks[TASK_PDM_PCM]._queueHandle, PDM_PCM_TASK_PRIORITY, &_tasks[TASK_PDM_PCM]._taskHandle) == pdPASS ? true : false;
+        retVal = xTaskCreate(funcNV, NV_TASK_NAME, 1000, &_tasks[TASK_NV]._queueHandle, FLASH_TASK_PRIORITY, &_tasks[TASK_NV]._taskHandle) == pdPASS ? true : false;
         if (retVal == false) break;
 
         switch (mode)

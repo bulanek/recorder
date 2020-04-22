@@ -81,8 +81,12 @@
 #define BLOCK_SIZE 512
 
 
-#define ASSERT while(1){}
-
+#define ASSERT(cond, msg)      \
+{\
+if (!(cond)) { \
+while(1);   \
+} \
+}
 
 typedef enum{
 	SPI_OK,

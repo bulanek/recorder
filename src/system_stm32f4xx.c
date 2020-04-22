@@ -168,11 +168,12 @@ void SystemInit(void)
 
     /* Reset PLLCFGR register */
     RCC->PLLCFGR = 0x24003010;
-    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 174);
-    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
-    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLP, 2); /* -> PLLP = 6*/
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, RECORDER_PLLCFGR_PLLN);
+    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, RECORDER_PLLCFGR_PLLM);
+//    SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLP, 2); /* -> PLLP = 6*/
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_0; /* -> PLLP = 4**/
 
-    SET_REGISTER_VALUE(RCC->CFGR, RCC_CFGR_PPRE1, 0b101); /* APB1 clock = AHB/4*/
+    RCC->CFGR |= RCC_CFGR_PPRE1_2 | RCC_CFGR_PPRE1_0;/* APB1 clock = AHB/4*/
 
   /* Reset HSEBYP bit */
     RCC->CR &= (uint32_t)0xFFFBFFFF;
@@ -266,6 +267,7 @@ void SystemCoreClockUpdate(void)
             pllvco = (HSI_VALUE / pllm) * plln;
         }
 
+
         pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >> 16) + 1) * 2;
         SystemCoreClock = pllvco / pllp;
         break;
@@ -278,6 +280,11 @@ void SystemCoreClockUpdate(void)
     tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
     /* HCLK frequency */
     SystemCoreClock >>= tmp;
+}
+
+uint32_t GetSystemCoreClock(void)
+{
+    return SystemCoreClock;
 }
 
 #define PLL_SOURCE_HSI

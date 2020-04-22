@@ -7,21 +7,24 @@
 
 namespace NV
 {
-class Service
+class Service : public ServiceIf
 {
 public:
     Service(): _pdmStarted(false) {}
-    bool Init(void);
-    bool StartPDM(void);
-    bool StopPDM(void);
+    virtual bool Init(void);
+    virtual void Deinit(void);
+
+    virtual bool StartPDM(void);
+    virtual bool StopPDM(void);
     /**     Open PCM file from info*/
-    bool StartPCM(void);
-    bool StopPCM(void);
+    virtual bool StartPCM(void);
+    virtual bool StopPCM(void);
 
-    bool GetPDMData(const uint16_t size, uint8_t* pBuffer,  uint16_t& numBytesRead);
+    virtual bool GetPDMData(const uint16_t size, uint8_t* pBuffer,  uint16_t& numBytesRead);
 
-    bool WritePDMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes);
-    bool WritePCMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes);
+    virtual bool WritePDMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes);
+    virtual bool WritePCMRecordData(const uint16_t* const pData, const uint16_t dataLength);
+    virtual bool WriteTraceData(const uint8_t* const pData, const uint16_t dataLength);
 
     bool _pdmStarted;
 
@@ -51,6 +54,8 @@ private:
     #define NV_PDM_FILE_NAME_SUFFIX ".pdm"
     #define NV_PCM_FILE_NAME_SUFFIX ".wav"
     #define NV_FILE_INFO "NV_INFO.bin"
+    #define NV_FILE_TRACE "NV_TRACE.txt"
+
     static const uint16_t NV_FILE_NAME_SIZE = STRLEN_STATIC(NV_FILE_NAME_PREFIX) + 3 + 4 + 1 + 10; /* <NV_FILE_NAME_PREFIX>_XXX.txt*/
     static const uint16_t MAX_NUM_OF_FILES = 1000U;
 
@@ -62,12 +67,17 @@ private:
         FIL _FilePCM;
     } PDMPCMFile;
 
+    bool InitInfoFile(void);
+    bool InitTraceFile(void);
+
     void SetFileName(const FileType type, const uint16_t counter);
 
     FATFS _FatFs;				                /** File system object for each logical drive */
     PDMPCMFile _pdmpcmFile;
 
     FIL _infoFile;                          /** Configuration file descriptor. */
+    FIL _traceFile;                          /** Configuration file descriptor. */
+
     ConfigInfo  _configInfo;                 /** Configuration in @see _infoFile. */
     State       _state;
 };

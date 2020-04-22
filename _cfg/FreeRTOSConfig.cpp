@@ -43,19 +43,19 @@ void vAssertCalled(const char* pFileName, const int line)
 void fTraceQUEUE_SEND_FAILED(const char* pFileName, const int line, void* queue)
 {
 //    TRACE_01(TRACE_LEVEL_ERROR, "Queue send failed: %i", reinterpret_cast<uint32_t>(queue));
-    printf("Trace in %s, level error, traceQUEUE_SEND_FAILED, line %i: %i\n", pFileName, line, queue);
+    //printf("Trace in %s, level error, traceQUEUE_SEND_FAILED, line %i: %i\n", pFileName, line, queue);
 }
 
 void fTraceQUEUE_RECEIVE_FAILED(const char* pFileName, const int line, void* queue)
 {
-    printf("Trace in %s, level error, traceQUEUE_RECEIVE_FAILED, line %i: %i\n", pFileName, line, queue);
+    //printf("Trace in %s, level error, traceQUEUE_RECEIVE_FAILED, line %i: %i\n", pFileName, line, queue);
 }
 
 void fTraceQUEUE_SEND_FROM_ISR_FAILED(const char* pFileName, const int line, void* queue)
 {
-    write("Trace in ",0xFFFF); 
-    write((char*)pFileName, 0xFFFF);
-    write(", level error, traceQUEUE_SEND_FROM_ISR_FAILED, line: \n", 0xFFFF);
-    while (1);
+    //write("Trace in ",0xFFFF); 
+    //write((char*)pFileName, 0xFFFF);
+    //write(", level error, traceQUEUE_SEND_FROM_ISR_FAILED, line: \n", 0xFFFF);
+    //while (1);
 }
 

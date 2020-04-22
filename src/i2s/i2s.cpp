@@ -9,11 +9,6 @@ extern "C" bool i2s_init(void)
     return f_I2SService.Init();
 }
 
-extern "C" void i2s_receive_data(const uint16_t data)
-{
-    f_I2SService.ReceiveData(data);
-}
-
 extern "C" uint16_t* i2s_get_buffer1(void)
 {
     return f_I2SService.GetBuffer1();
@@ -28,4 +23,5 @@ extern "C" uint16_t i2s_get_buffer_size_word(void)
 {
     return f_I2SService.BUFFER_SIZE_WORDS;
 }
+
 

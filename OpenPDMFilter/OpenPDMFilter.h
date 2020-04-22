@@ -49,7 +49,7 @@
  * and RAM memory.
  * Note: Without Look-Up Table up to stereo@16KHz configuration is supported.
  */
-#define USE_LUT
+//#define USE_LUT
 
 #define SINCN            3
 #define DECIMATION_MAX 128
@@ -88,8 +88,8 @@ typedef struct {
 /* Exported functions ------------------------------------------------------- */
 
 void Open_PDM_Filter_Init(TPDMFilter_InitStruct *init_struct);
-void Open_PDM_Filter_64(uint8_t* data, int16_t* data_out, uint16_t mic_gain, TPDMFilter_InitStruct *init_struct);
-void Open_PDM_Filter_128(uint8_t* data, int16_t* data_out, uint16_t mic_gain, TPDMFilter_InitStruct *init_struct);
+void Open_PDM_Filter_64(uint8_t* data, int16_t* data_out, uint16_t mic_gain, const unsigned int nSamples);
+void Open_PDM_Filter_128(uint8_t* data, int16_t* data_out, uint16_t mic_gain, const unsigned int nSamples);
 
 #ifdef __cplusplus
 }

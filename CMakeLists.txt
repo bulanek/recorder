@@ -50,21 +50,22 @@ add_definitions("-DSTM32F4")
 add_definitions("-DSTM32F401xx")
 add_definitions("-DSTM32F401RETx")
 add_definitions("-DNUCLEO_F401RE")
-if (DEFINED FF13_DMA)
+if (${FF13_DMA} STREQUAL "ON")
 add_definitions("-DFF13_DMA")
-message(STATUS "FF13 write using DMA: ON")
 endif()
+message(STATUS "FF13 write using DMA: ${FF13_DMA}")
 
 
 add_compile_options(
         -mcpu=cortex-m4
 		-mthumb
 		-msoft-float
+#		-mfloat-abi=hard
 		-mfpu=fpv4-sp-d16
 		-mfloat-abi=softfp
 		-fstrict-volatile-bitfields
         -ffunction-sections
-        -fdata-sections 
+        -fdata-sections
         -fmessage-length=0
 		-fdiagnostics-color=auto
         -ffreestanding
@@ -79,15 +80,12 @@ add_compile_options(
 		-fmessage-length=0 
         -fdiagnostics-show-option 
 		-fdiagnostics-color=auto 
-		-Werror=missing-parameter-type 
 		-Werror=address 
 		-Werror=cast-align 
         -Werror=return-type 
 		-Werror=shift-count-negative 
 		-Werror=shift-count-overflow 
 		-Werror=shift-negative-value 
-        -Werror=implicit 
-		-Werror=implicit-int 
         -Werror=parentheses 
         -Werror=switch 
 		-Werror=switch-bool 
@@ -103,21 +101,17 @@ add_compile_options(
 		-Werror=stringop-truncation 
         -Werror=bool-compare 
 		-Werror=bool-operation 
-		-Werror=duplicated-branches 
+#		-Werror=duplicated-branches 
 		-Werror=duplicated-cond 
 		-Werror=tautological-compare 
 		-Werror=float-equal 
 		-Werror=shadow 
 		-Werror=dangling-else 
 		-Werror=empty-body 
-		-Werror=extra-semi 
-		-Werror=placement-new 
 		-Werror=pointer-arith 
 		-Werror=pointer-compare 
 		-Werror=logical-op 
         -Werror=logical-not-parentheses 
-		-Werror=nested-externs 
-        -Werror=override-init 
 		-Werror=missing-field-initializers 
 		-Werror=missing-braces 
 		-Werror=sizeof-pointer-div 
@@ -130,10 +124,6 @@ add_compile_options(
 		-Werror=stringop-overflow 
 		-Werror=stringop-truncation
 		-Werror=bool-operation 
-		-Werror=duplicated-branches 
-		-Werror=duplicated-cond 
-		-Werror=tautological-compare 
-		-Werror=float-equal
         -Werror=init-self
         -Werror=sequence-point
         -Werror=overflow
@@ -141,24 +131,29 @@ add_compile_options(
         -Werror=bool-compare
         -Werror=type-limits
         -Werror=logical-not-parentheses
-        -Werror=override-init
         -Werror=enum-compare
-        -Werror=implicit-function-declaration
 		-Werror=empty-body 
-		-Werror=extra-semi 
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=missing-parameter-type")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit -Werror=implicit-int")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=nested-externs")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=override-init")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
 
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=placement-new")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=extra-semi")
 
 file(GLOB_RECURSE TMP_SOURCES_OWN ${SRC_ROOT}/${module}/*(.c|.cpp))
 
 set(OPTIMIZATION_DEBUG "-O0")
-set(OPTIMIZATION_RELEASE "-O2 -flto")
+set(OPTIMIZATION_RELEASE "-O2 ")
 
 set(CMAKE_C_FLAGS_DEBUG " ${OPTIMIZATION_DEBUG} -g")
-set(CMAKE_C_FLAGS_RELEASE " ${OPTIMIZATION_RELEASE} -g ")
+set(CMAKE_C_FLAGS_RELEASE " ${OPTIMIZATION_RELEASE} -g  ")
 set(CMAKE_CXX_FLAGS_DEBUG " ${OPTIMIZATION_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE " ${OPTIMIZATION_RELEASE} -g")
 

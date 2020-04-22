@@ -9,6 +9,8 @@ void HAL_ASSERT(bool condition)
     while (1) {}
 }
 
+
+
     /*
     GPIO A0 - Configuration of PDM->PCM mode. Pull down input.
     */
@@ -49,7 +51,9 @@ void HAL_INIT_CONFIG_UART(void)
     USART2->CR1 |= USART_CR1_UE;
     /*USARDIV = 16 MHz / (required UART clock * 8x (2-OVER8))  OVER8 = 0*/
     /* UPDATE FREQ!  fr 14.5 MHz -> value USARDIV = 7.8668 ->  Mantisa = 7, Fraction*16 = 14 */
-    USART2->BRR = 0x07E; /* 8.6875 -> Mantisa(USARDIV)=8 <4 | Fraction*16 (0.6875*16 = 11)/
+    //USART2->BRR = 0x07E; /* 8.6875 -> Mantisa(USARDIV)=8 <4 | Fraction*16 (0.6875*16 = 11) */
+    /* UPDATE FREQ!  fr 87MHz/4(presc) = 21.75 -> value USARDIV = 11.8001 ->  Mantisa = 11, Fraction*16 = 12 */
+    USART2->BRR = 0x0BC;
 
     /* Configure USART1 */
     /* 8 data bit, 1 start bit, 1 stop bit; no parity; transmit enable;
@@ -78,23 +82,22 @@ int _read(int file, char *pData, int len)
 
 int _write(int file, char *pData, int len)
 {
-    uint8_t* pDataSend = pvPortMalloc(len);
+    uint8_t* pDataSend = malloc(len);
     if (pDataSend == NULL)
     {
         return 0;
     }
-    memcpy(pDataSend, pData, len);
+    memcpy(pDataSend, pData, len );
 
     TaskQueueUART taskQueue;
     taskQueue._data = pDataSend;
-    taskQueue._dataLength = len;
+    taskQueue._dataLength = len ;
     taskQueue._opcode = UART_TR;
 
     if (tskma_send_to_uart(&taskQueue) == false)
     {
         return 0;
     }
-
     return len;
 }
 

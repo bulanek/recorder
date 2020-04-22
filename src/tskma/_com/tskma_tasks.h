@@ -16,7 +16,9 @@ typedef enum
     NV_PCM_STOP,
     NV_OPCODE_GET_PDM_DATA,
     NV_OPCODE_WRITE_PCM_DATA,
-    NV_OPCODE_STOP_RESET
+    NV_OPCODE_WRITE_TRACE_DATA,
+    NV_OPCODE_STOP_RESET,
+    NV_STOP
 } NVOpcode;
 
 typedef enum
@@ -42,7 +44,9 @@ typedef struct _TaskQueuePDMPCM
 typedef struct _TaskQueueNV
 {
     uint16_t*        _pData;
-    uint16_t         _dataLengthBytes;
+    uint16_t         _dataLength;
+    uint8_t*         _pDataTrace;
+
     NVOpcode         _opcode;
 } TaskQueueNV;
 

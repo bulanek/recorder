@@ -8,7 +8,6 @@ extern "C"
 #endif
 
 bool i2s_init(void);
-void i2s_receive_data(const uint16_t data);
 
 uint16_t* i2s_get_buffer1(void);
 uint16_t* i2s_get_buffer2(void);

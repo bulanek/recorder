@@ -7,7 +7,7 @@ set(CMAKE_SYSTEM_PROCESSOR arm)
 set(BIN_SUFFIX)
 set (ARM_GCC_HOME_REL "/usr" )
 if (WIN32)
-	set (ARM_GCC_HOME_REL "C:/git/mf_devkit/Tools/gnu_tools_arm_embedded_8_2018_q4_major")
+	set (ARM_GCC_HOME_REL "C:/git/mf_dev/Tools/gnu_tools_arm_embedded_9_2019_q4_major")
 set (BIN_SUFFIX ".exe")
 endif()
 
@@ -32,4 +32,4 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 
-include_directories(${ARM_GCC_INC_DIR} ${ARM_GCC_INC_DIR}/c++/8.2.1)
+include_directories(${ARM_GCC_INC_DIR} ${ARM_GCC_INC_DIR}/c++/*)

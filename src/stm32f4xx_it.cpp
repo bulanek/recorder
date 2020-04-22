@@ -16,6 +16,7 @@
 #include "recorder_inc.h"
 #include "trace_com.h"
 #include "trace_out.hpp"
+#include "pdmpcm_com.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -46,16 +47,10 @@ extern "C" void EXTI0_IRQHandler(void)
     }
 }
 
+
 extern "C" void DMA1_Stream3_IRQHandler(void)
 {
-    static TickType_t ticks = xTaskGetTickCount();
-    TickType_t difference = xTaskGetTickCount() - ticks;
-    ticks = xTaskGetTickCount();
 
-    if ((DMA1->LISR & DMA_LISR_TCIF3) != 0)
-    {
-        DMA1->LIFCR = DMA_LIFCR_CTCIF3;
-    }
     if ((DMA1->LISR & DMA_LISR_TEIF3) != 0 || DMA1->LISR & DMA_LISR_DMEIF3)
     {
         if ((DMA1->LISR & DMA_LISR_TEIF3) != 0)
@@ -70,8 +65,13 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
         {
             DMA1->LIFCR = DMA_LIFCR_CFEIF3;
         }
+        while (1) {};
+    }
+    if ((DMA1->LISR & DMA_LISR_TCIF3) == 0)
+    {
         return;
     }
+
     uint16_t* pData;
     if (DMA1_Stream3->CR & DMA_SxCR_CT)
     {
@@ -82,13 +82,70 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
         pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M0AR);
     }
 
-    TaskQueuePDMPCM taskQueuePdmPcm;
-    taskQueuePdmPcm._pdmDataPointer = pData;
-    taskQueuePdmPcm._sizePdmDataWord = i2s_get_buffer_size_word();
-    taskQueuePdmPcm._opcode = PDM_PCM_GET_PCM_DATA;
-    tskma_send_to_pdm_pcm_irt(&taskQueuePdmPcm);
+    volatile uint16_t ndtr = DMA1_Stream3->NDTR;
+    static uint16_t pcmSize = pdmpcm_get_pcm_size_samples(i2s_get_buffer_size_word());
+
+    static const int numBuffers = 4;
+    static int16_t* ppPcmBuffers[numBuffers];
+    static int counter = 10;
+    if (counter == 10)
+    {
+        counter = 0;
+        for (size_t i = 0; i < numBuffers; i++)
+        {
+            ppPcmBuffers[i] = new int16_t[pcmSize];
+            ASSERT(ppPcmBuffers[i] != nullptr, " pPcmBuffer = nullptr");
+        }
+    }
+
+    static uint16_t size = pcmSize;
+    pdmpcm_process((uint8_t*)pData, ppPcmBuffers[counter], size);// numMsPDMSamples* pcmSizeWord);
+    TaskQueueNV nvQueue;
+
+    nvQueue._opcode = NV_OPCODE_WRITE_PCM_DATA;
+    nvQueue._pData = reinterpret_cast<uint16_t*>(ppPcmBuffers[counter]);
+    nvQueue._dataLength = size;
+    ++counter;
+    counter %= numBuffers;
+
+    tskma_send_to_nv_irt(&nvQueue);
+
+    if ((DMA1->LISR & DMA_LISR_TCIF3) != 0)
+    {
+        DMA1->LIFCR = DMA_LIFCR_CTCIF3;
+    }
 }
 
+#ifdef FF13_DMA
+extern "C" void DMA1_Stream5_IRQHandler(void)
+{
+    if ((DMA1->HISR & DMA_HISR_TCIF5) != 0)
+    {
+        DMA1->HIFCR = DMA_HIFCR_CTCIF5;
+    }
+	volatile uint32_t num = DMA1_Stream5->NDTR;
+    if ((DMA1->HISR & DMA_HISR_TEIF5) != 0 
+		|| (DMA1->HISR & DMA_HISR_DMEIF5) != 0 
+		|| (DMA1->HISR & DMA_HISR_FEIF5) != 0)
+    {
+        if ((DMA1->HISR & DMA_HISR_TEIF5) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CTEIF5;
+        }
+        if ((DMA1->HISR & DMA_HISR_DMEIF5) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CDMEIF5;
+        }
+        if ((DMA1->HISR & DMA_HISR_FEIF5) != 0)
+        {
+            DMA1->HIFCR = DMA_HIFCR_CFEIF5;
+        }
+		//while (1);
+    }
+	BaseType_t resume = xTaskResumeFromISR(tskma_get_nv_task_handle());
+    portYIELD_FROM_ISR(resume);
+}
+#endif /* FF13_DMA */
 
 static char dataChar;
 extern "C" void USART2_IRQHandler(void)

@@ -3,6 +3,11 @@
 
 NV::Service f_NVService;
 
+NV::ServiceIf* GetNVService(void)
+{
+    return static_cast<NV::ServiceIf*>(&f_NVService);
+}
+
 extern "C" bool nv_init(void)
 {
     return f_NVService.Init();
@@ -37,8 +42,14 @@ extern "C" bool nv_write_pdm_record_data(const uint16_t* const pData, const uint
     return f_NVService.WritePDMRecordData(pData, dataLengthBytes);
 }
 
-extern "C" bool nv_write_pcm_record_data(const uint16_t* const pData, const uint16_t dataLengthBytes)
+extern "C" bool nv_write_pcm_record_data(const uint16_t* const pData, const uint16_t dataLength)
 {
-    return f_NVService.WritePCMRecordData(pData, dataLengthBytes);
+    return f_NVService.WritePCMRecordData(pData, dataLength);
 }
+
+extern "C" bool nv_write_trace_data(const uint8_t* const pData, const uint16_t dataLength)
+{
+    return f_NVService.WriteTraceData(pData, dataLength);
+}
+
 

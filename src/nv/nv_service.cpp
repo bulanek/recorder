@@ -7,19 +7,13 @@
 
 namespace NV
 {
-bool Service::Init(void)
+
+bool Service::InitInfoFile(void)
 {
     bool retVal = true;
     do
     {
-        /* NV_INIT(); Note BoBu while f_open called */
-        FRESULT res = f_mount(&_FatFs, "", 0);
-        if (res != FR_OK && res != FR_EXIST)
-        {
-            retVal = false;
-            break;
-        }
-
+        FRESULT res;
         /* Read info file if exist*/
         res = f_open(&_infoFile, NV_FILE_INFO, FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
         if (res != FR_OK)
@@ -47,6 +41,100 @@ bool Service::Init(void)
         }
     } while (0);
     return retVal;
+}
+
+bool Service::InitTraceFile(void)
+{
+    bool retVal = true;
+    do
+    {
+        FRESULT res;
+        /* Read info file if exist*/
+        res = f_open(&_traceFile, NV_FILE_TRACE, FA_CREATE_ALWAYS |  FA_WRITE );
+        if (res != FR_OK)
+        {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed open trace file: %i", res);
+            retVal = false;
+            break;
+        }
+        char bufferTrace[] = "Traces for recorder:\n";
+        UINT numWritten;
+        res = f_write(&_traceFile, bufferTrace, strlen(bufferTrace), &numWritten);
+        if (res != FR_OK)
+        {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed write file: %i", res);
+            retVal = false;
+            break;
+        }
+        char bufferTrace2[] = "Test nv for recorder:\n";
+        res = f_write(&_traceFile, bufferTrace2, strlen(bufferTrace2) , &numWritten);
+        if (res != FR_OK)
+        {
+            TRACE_01(TRACE_LEVEL_ERROR, "Failed write file: %i", res);
+            retVal = false;
+            break;
+        }
+        res = f_sync(&_traceFile);
+        if (res != FR_OK)
+        {
+            TRACE_01(TRACE_LEVEL_ERROR, "Sync file failed: %i", res);
+            retVal = false;
+            break;
+        }
+    } while (0);
+    return retVal;
+}
+
+bool Service::Init(void)
+{
+    bool retVal = true;
+    do
+    {
+        FRESULT res;
+        /* NV_INIT(); Note BoBu while f_open called */
+        res = f_mount(&_FatFs, "", 0);
+        if (res != FR_OK && res != FR_EXIST)
+        {
+            retVal = false;
+            break;
+        }
+
+        if ((retVal = this->InitInfoFile()) == false)
+        {
+        }
+
+        if (( this->InitTraceFile()) == false)
+        {
+            break;
+        }
+
+    } while (0);
+    return retVal;
+}
+
+void Service::Deinit(void)
+{
+    FRESULT res;
+
+    if ((res = f_close(&_infoFile)) != FR_OK)
+    {
+        //TRACE_01(TRACE_LEVEL_ERROR, "Close infoFile failed: %i", res);
+    }
+    if ((res = f_close(&_traceFile)) != FR_OK)
+    {
+        //TRACE_01(TRACE_LEVEL_ERROR, "Close traceFile failed: %i", res);
+    }
+    if ((res = f_close(&_pdmpcmFile._FilePDM)) != FR_OK)
+    {
+        //TRACE_01(TRACE_LEVEL_ERROR, "Close pdm file  failed: %i", res);
+    }
+    if ((res = f_close(&_pdmpcmFile._FilePCM)) != FR_OK)
+    {
+        //TRACE_01(TRACE_LEVEL_ERROR, "Close pcm file  failed: %i", res);
+    }
+    if ((res = f_unmount("")) != FR_OK)
+    {
+    }
 }
 
 bool Service::StartPDM(void)
@@ -191,7 +279,7 @@ bool Service::StartPCM(void)
             retVal = false;
             break;
         }
-        TRACE_01(TRACE_LEVEL_LOG, "Start of writing pcm file with index %i", _configInfo._filePCMCounter);
+        TRACE_01(TRACE_LEVEL_LOG, "Start of writing pcm file with index %i done", _configInfo._filePCMCounter);
     } while (0);
     return retVal;
 }
@@ -289,31 +377,48 @@ bool Service::WritePDMRecordData(const uint16_t* const pData, const uint16_t dat
             TRACE_01(TRACE_LEVEL_ERROR, "Write failed: %i", res);
             break;
         }
-        //res = f_sync(&_pdmpcmFile._FilePDM);
-        //if (res != FR_OK)
-        //{
-        //    retVal = false;
-        //    TRACE_01(TRACE_LEVEL_ERROR, "Sync failed: %i", res);
-        //    break;
-        //}
+
     } while (0);
     return retVal;
 }
 
-bool Service::WritePCMRecordData(const uint16_t* const pData, const uint16_t dataLengthBytes)
+bool Service::WritePCMRecordData(const uint16_t* const pData, const uint16_t dataLength)
 {
     bool retVal = true;
     UINT numBytesWritten;
-    FRESULT res = f_write(&_pdmpcmFile._FilePCM, pData, dataLengthBytes, &numBytesWritten);
+    FRESULT res = f_write(&_pdmpcmFile._FilePCM, pData, dataLength * sizeof(uint16_t), &numBytesWritten);
     if (res != FR_OK)
     {
+        TRACE_01(TRACE_LEVEL_ERROR, "Write failed: %i", res);
         retVal = false;
     }
-    //res = f_sync(&_pdmpcmFile._FilePCM);
-    //if (res != FR_OK)
-    //{
-    //    retVal = false;
-    //}
+    return retVal;
+}
+
+bool Service::WriteTraceData(const uint8_t* const pData, const uint16_t dataLength)
+{
+    bool retVal = true;
+    UINT numBytesWritten;
+    FRESULT res = f_write(&_traceFile, pData, dataLength , &numBytesWritten);
+    do
+    {
+        if (numBytesWritten != dataLength)
+        {
+            retVal = false;
+            break;
+        }
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+        res = f_sync(&_traceFile);
+        if (res != FR_OK)
+        {
+            retVal = false;
+            break;
+        }
+    } while (0);
     return retVal;
 }
 

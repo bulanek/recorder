@@ -2,7 +2,7 @@
 #include "recorder_inc.h"
 #include "i2s_com.h"
 
-static void i2s_init_gpio(void)
+static void _i2s_init_gpio(void)
 {
     /* I2S pins:
         CK - PB13, 
@@ -24,39 +24,37 @@ static void i2s_init_gpio(void)
     GPIOB->AFR[1] |= (GPIO_AFRH_AFSEL15_2 | GPIO_AFRH_AFSEL15_0); /* Alternate function 5 - SPI*/
 }
 
-static void i2s_init_spi_reg(void)
+static void _i2s_init_spi_reg(void)
 {
     RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
-
 	// Disable I2S
     SPI2->I2SCFGR &= ~SPI_I2SCFGR_I2SE;
 
-	// Set 192kHz sampling (for data length 16bit) (ref.note : 590)
-	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 11);
-	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 1);
+    /* I2S_SPR: 
+        MCKOE: 0 - Master clock enable
+        ODD: 1 - Odd factor for the prescaler 0: real divider value is = I2SDIV *2 + 1
+    */
+	// Set sampling (for data length 16bit) (ref.note : 590)
+	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, RECORDER_I2S_I2SSPR_DIV);
+	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, RECORDER_I2S_I2SSPR_ODD);
 
+    /* I2SCFGR defaults: 
+        I2SSTD: philips standard, 
+        CLPOL: low level polarity, 
+        DATLEN: 16-bit datalength, 
+        CHLEN: 16-bit wide channel length. */
 	// Interrupts
-    //SPI2->CR2 |= SPI_CR2_RXNEIE;
-    //SPI2->CR2 |= SPI_CR2_ERRIE;
-	// Set I2S mod on SPI2
+	// Set I2S mode
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SMOD;
 	// Set as master - receive
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SCFG, 0x03);
-	// Standard: Philips (default)
-//	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SSTD, 0x00);
-	// Set steady state (high level)
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CKPOL, 0x01);
-	// Data length to be transfered (16 bit) (default)
-	//SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_DATLEN, 0x00);
-	// Set number of bits per channel (16 bit) (default)
-	//SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
+    SPI2->I2SCFGR |= SPI_I2SCFGR_I2SCFG_0 | SPI_I2SCFGR_I2SCFG_1;
 
     SPI2->CR2 |= SPI_CR2_RXDMAEN; /* Enable Rx DMA*/
 
     SPI2->I2SCFGR |= SPI_I2SCFGR_I2SE;
 }
 
-static void i2s_init_dma(void)
+static void _i2s_init_dma(void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
     RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
@@ -72,10 +70,10 @@ static void i2s_init_dma(void)
     DMA1_Stream3->CR &= ~(DMA_SxCR_CHSEL  /* Channel 0 (SPI2_Rx) */
         | DMA_SxCR_DIR      /* Peripheral to memory. 00 */
         | DMA_SxCR_PL);     /* Priority */
-    //DMA1_Stream3->CR |= DMA_SxCR_PL_0 | DMA_SxCR_PL_1;
 
     DMA1_Stream3->CR |= DMA_SxCR_DBM; /* Double buffer switching */
     DMA1_Stream3->CR |= DMA_SxCR_CIRC; /* Circ mode */
+	DMA1_Stream3->CR |= DMA_SxCR_MINC;		/* Memory address pointer is incremented after each data transfer. */
 
     DMA1_Stream3->CR |= DMA_SxCR_MSIZE_0; /* 16 bit size of memory */
     DMA1_Stream3->CR |= DMA_SxCR_PSIZE_0; /* 16 bit size of peripheral. */
@@ -84,65 +82,41 @@ static void i2s_init_dma(void)
     DMA1_Stream3->CR |= DMA_SxCR_DMEIE; /* Direct mode error  */
     DMA1_Stream3->FCR |= DMA_SxFCR_FEIE; /* FiFo error  */
 
-//    DMA1_Stream3->CR |= DMA_SxCR_MBURST_0; /* Burst transfer of 4 beats*/
-//    DMA1_Stream3->CR |= DMA_SxCR_PBURST_0;
-//    DMA1_Stream3->FCR |= DMA_SxFCR_FTH_0 | DMA_SxFCR_FTH_1;
     DMA1_Stream3->FCR &= ~(DMA_SxFCR_DMDIS);
-//    DMA1_Stream3->FCR |= DMA_SxFCR_DMDIS;
-
-
-    DMA1->LIFCR |= DMA_LIFCR_CTCIF3;
-    DMA1->LIFCR |= DMA_LIFCR_CTEIF3;
-
-    unsigned long which = (unsigned long)DMA1_Stream3;
-    volatile DMA_Stream_TypeDef* pStream = DMA1_Stream3;
-    DMA1_Stream3->CR |= DMA_SxCR_EN;
 }
 
-
-static void i2s_init_irt(void)
+static void _i2s_init_irt(void)
 {
     IRQn_Type type = DMA1_Stream3_IRQn;
     NVIC_EnableIRQ(type);
     NVIC_SetPriority(type, 15U);
 }
 
-static void i2s_init_clock(void)
+static void _i2s_init_clock(void)
 {
     // Disable clock
     RCC->CR &= ~RCC_CR_PLLI2SON;
     RCC->CR &= ~RCC_CR_PLLON;
 
-
-    // STM32f041 reference note 105: VCO=PLL_input_f/PLLM; VCO in <1,2>MHz
-	//                                 recommended 2MHz to suppress jitter.
-    //// for 16 MHz PLLM = 8  to VCO_in = 2 MHz
-    //SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
-
-    //// for VCO_out = 432 MHz
-    //SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLN, 216);
-
     // see reference note 590: table for PLLI2SN PLLI2SR
-	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 424);
-	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, 3);
-
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, RECORDER_I2S_PLLCFGR_PLLN);
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, RECORDER_I2S_PLLCFGR_PLLR);
 }
 
-static void i2s_start_clock(void)
+static void _i2s_start_clock(void)
 {
     RCC->CR |= RCC_CR_PLLON;
     RCC->CR |= RCC_CR_PLLI2SON;
 }
 
-
 void I2S_INIT_MIC(void)
 {
-    i2s_init_gpio();
-    i2s_init_irt();
-    i2s_init_clock();
-    i2s_init_spi_reg();
-    i2s_init_dma();
-    i2s_start_clock();
+    _i2s_init_gpio();
+    _i2s_init_irt();
+    _i2s_init_clock();
+    _i2s_init_spi_reg();
+    _i2s_init_dma();
+    _i2s_start_clock();
 }
 
 void I2S_START_MIC(void)
@@ -150,7 +124,6 @@ void I2S_START_MIC(void)
     vPortEnterCritical();
     DMA1_Stream3->CR |= DMA_SxCR_EN;
     vPortExitCritical();
-
 }
 
 void I2S_STOP_MIC(void)

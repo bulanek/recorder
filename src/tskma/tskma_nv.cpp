@@ -14,6 +14,14 @@ static void task_nv_common(void* pParameters)
     TickType_t xTicksToWait = portMAX_DELAY;
     TRACE_00(TRACE_LEVEL_LOG, "Start nv common");
 
+    bool retVal;
+    if ((retVal = nv_init()) == false)
+    {
+        TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
+    }
+
+    NV::ServiceIf* pService = GetNVService();
+
     for (;; )
     {
         if (xQueueReceive(xQueue, &queue, xTicksToWait) == pdPASS)
@@ -22,7 +30,7 @@ static void task_nv_common(void* pParameters)
             {
             case NV_PDM_START:
                 TRACE_00(TRACE_LEVEL_LOG, "NV_PDM_START request");
-                if (nv_start_pdm() != true)
+                if (pService->StartPDM() != true)
                 {
                     TRACE_00(TRACE_LEVEL_ERROR, "Start nv pdm failed");
                 }
@@ -50,10 +58,20 @@ static void task_nv_common(void* pParameters)
                 break;
             case NV_OPCODE_WRITE_PCM_DATA:
             {
-                if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
+                if (nv_write_pcm_record_data(queue._pData, queue._dataLength) == false)
                 {
                     TRACE_00(TRACE_LEVEL_WARN, "Write record pcm data failed");
                 }
+                //delete queue._pData;
+                break;
+            }
+            case NV_OPCODE_WRITE_TRACE_DATA:
+            {
+                if (nv_write_trace_data(queue._pDataTrace, queue._dataLength) == false)
+                {
+                    //TRACE_00(TRACE_LEVEL_WARN, "Write record pcm data failed");
+                }
+                delete queue._pDataTrace;
                 break;
             }
             case NV_OPCODE_STOP_RESET:
@@ -62,9 +80,11 @@ static void task_nv_common(void* pParameters)
                 (void)nv_stop_pcm();
                 NVIC_SystemReset();
                 break;
-
+            case NV_STOP:
+                GetNVService()->Deinit();
+                break;
             default:
-                ASSERT("wrong opcode");
+                TRACE_01(TRACE_LEVEL_ERROR, "wrong opcode: %i",queue._opcode);
                 break;/* TODO error*/
             }
         }
@@ -74,108 +94,8 @@ static void task_nv_common(void* pParameters)
 extern "C" void task_nv(void* pParameters)
 {
 
-    TRACE_00(TRACE_LEVEL_LOG, "Start of nv task");
-    //if (nv_start_pdm() == false)
-    //{
-    //    TRACE_00(TRACE_LEVEL_ERROR, "nv init failed");
-    //    vTaskDelete(NULL);
-    //	return;
-    //}
-
+    //TRACE_00(TRACE_LEVEL_LOG, "Start of nv task");
     task_nv_common(pParameters);
 }
 
-//static void getPDMtoPCMData(void)
-//{
-//    bool isNewFile = false;
-//    do
-//    {
-//        isNewFile = false;
-//        TaskQueuePDMPCM queuePDMPCM;
-//        queuePDMPCM._opcode = PDM_PCM_GET_PCM_DATA;
-//        queuePDMPCM._pdmDataPointer = pdmpcm_pop_pdm_buffer();
-//        queuePDMPCM._sizePdmDataWord = pdmpcm_get_pdm_size_in_word();
-//        uint16_t numReadBytes;
-//        if (queuePDMPCM._pdmDataPointer == NULL)
-//        {
-//            TRACE_00(TRACE_LEVEL_ERROR, "No pdm data");
-//            break;
-//        }
-//        if (nv_get_pdm_data(queuePDMPCM._sizePdmDataWord, queuePDMPCM._pdmDataPointer, &numReadBytes) == false)
-//        {
-//            TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
-//            pdmpcm_push_pdm_buffer(queuePDMPCM._pdmDataPointer);
-//            break;
-//        }
-//
-//        if (numReadBytes == queuePDMPCM._sizePdmDataWord)
-//        {
-//            if (tskma_send_to_pdm_pcm(&queuePDMPCM) == false)
-//            {
-//                TRACE_00(TRACE_LEVEL_ERROR, "send to pdm pcm task failed");
-//                break;
-//            }
-//        }
-//        if (numReadBytes != queuePDMPCM._sizePdmDataWord) /* here got to the next pdm file*/
-//        {
-//            TRACE_00(TRACE_LEVEL_WARN, "End of file, next file start");
-//            pdmpcm_push_pdm_buffer(reinterpret_cast<uint8_t*>(queuePDMPCM._pdmDataPointer));
-//            if (nv_stop_pcm() == false)
-//            {
-//                TRACE_00(TRACE_LEVEL_ERROR, "nv_stop_pcm failed");
-//                break;
-//            }
-//            if (nv_start_pcm() == false)
-//            {
-//                TRACE_00(TRACE_LEVEL_ERROR, "nv_start_pcm failed");
-//                break;
-//            }
-//            isNewFile = true;
-//        }
-//    } while (isNewFile == true);
-//}
 
-
-extern "C" void task_nv_pcm(void* pParameters)
-{
-    TRACE_00(TRACE_LEVEL_LOG,"Start of nv task for pcm");
-
-    TaskQueueNV queue;
-    QueueHandle_t xQueue = *(QueueHandle_t*)pParameters;
-    TickType_t xTicksToWait = portMAX_DELAY;
-
-    for (;; )
-    {
-        if (xQueueReceive(xQueue, &queue, xTicksToWait) == pdPASS)
-        {
-            switch (queue._opcode)
-            {
-            case NV_PCM_START:
-                if (nv_start_pcm() != true)
-                {
-                    TRACE_00(TRACE_LEVEL_ERROR, "Start nv pdm failed");
-                }
-                break;
-            case NV_OPCODE_WRITE_PCM_DATA:
-                static int counter = 0;
-                ++counter;
-                break;
-                //if (nv_write_pcm_record_data(queue._pData, queue._dataLengthBytes) == false)
-                //{
-                //    TRACE_00(TRACE_LEVEL_ERROR, "Write pcm data failed");
-                //}
-                //pdmpcm_push_pcm_buffer(reinterpret_cast<int16_t*>(queue._pData));
-                //vPortFree(queue._pData);
-                //getPDMtoPCMData();
-                break;
-            case NV_OPCODE_STOP_RESET:
-                (void)nv_stop_pcm();
-                NVIC_SystemReset();
-                break;
-            default:
-                TRACE_01(TRACE_LEVEL_ERROR, "Unexpected nv opcode %i", queue._opcode);
-                break;
-            }
-        }
-    }
-}
