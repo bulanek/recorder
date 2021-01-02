@@ -11,12 +11,12 @@ extern "C" bool i2s_init(void)
 
 extern "C" uint16_t* i2s_get_buffer1(void)
 {
-    return f_I2SService.GetBuffer1();
+    return f_I2SService._bufferForDMA1;
 }
 
 extern "C" uint16_t* i2s_get_buffer2(void)
 {
-    return f_I2SService.GetBuffer2();
+    return f_I2SService._bufferForDMA2;
 }
 
 extern "C" uint16_t i2s_get_buffer_size_word(void)

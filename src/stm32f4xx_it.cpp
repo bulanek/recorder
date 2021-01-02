@@ -75,16 +75,16 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
     uint16_t* pData;
     if (DMA1_Stream3->CR & DMA_SxCR_CT)
     {
-        pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M1AR);
+        pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M0AR);
+        //pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M1AR);
     }
     else
     {
-        pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M0AR);
+        pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M1AR);
+        //pData = reinterpret_cast<uint16_t*>(DMA1_Stream3->M0AR);
     }
 
-    volatile uint16_t ndtr = DMA1_Stream3->NDTR;
     static uint16_t pcmSize = pdmpcm_get_pcm_size_samples(i2s_get_buffer_size_word());
-
     static const int numBuffers = 4;
     static int16_t* ppPcmBuffers[numBuffers];
     static int counter = 10;

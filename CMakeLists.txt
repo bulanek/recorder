@@ -181,7 +181,7 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections,-lm,-lc,
 
 # startup
 
-set(SOURCES ${SOUCES} ${SRC_ROOT}/startup/startup_stm32f401xe.s)
+set(SOURCES ${SOURCES} ${SRC_ROOT}/startup/startup_stm32f401xe.s)
 
 # list all et(SOURCES)
 foreach(module src startup _cfg  )
@@ -251,16 +251,25 @@ set (SOURCES ${SOURCES}
     ${SRC_ROOT}/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-#add_dependencies(${PROJECT_NAME} "FreeRTOS")
+set(EXECUTABLE ${PROJECT_NAME}.exe)
+
+add_executable(${EXECUTABLE} ${SOURCES})
 
 # CMAKE_OBJCOPY defined in the Toolchain.
 add_custom_command(
-		TARGET ${PROJECT_NAME} 
+		TARGET ${EXECUTABLE} 
 		POST_BUILD
-		COMMAND ${CMAKE_OBJCOPY} -Obinary ${PROJECT_NAME} ${APP_BIN_NAME}.bin
+		COMMAND ${CMAKE_OBJCOPY} -Obinary ${EXECUTABLE} ${APP_BIN_NAME}.bin
 		COMMENT "Creation of ${APP_BIN_NAME}.bin "
 		)
+
+add_custom_command(
+		TARGET ${EXECUTABLE} 
+		POST_BUILD
+		COMMAND  cmake.exe -E copy ${EXECUTABLE} ${PROJECT_NAME}
+		COMMENT "Creation of ${PROJECT_NAME}"
+		)
+
 
 # ------------------------------------------------------------------------------
 # DOC 
@@ -300,7 +309,7 @@ doxygen_add_docs(
 # INSTALL
 # ------------------------------------------------------------------------------
 install(
-	TARGETS ${PROJECT_NAME} 
+	TARGETS ${EXECUTABLE} 
     RUNTIME	DESTINATION	${CMAKE_INSTALL_PREFIX}
 )
 # Files created by add_custom_command (objcopy,..)

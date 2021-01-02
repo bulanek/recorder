@@ -15,7 +15,7 @@ static void _i2s_init_gpio(void)
     // I2S (MEMS) configuration
     GPIOB->MODER |= GPIO_MODER_MODE12_1 | GPIO_MODER_MODE13_1 | /*GPIO_MODER_MODE14_1 |*/ GPIO_MODER_MODE15_1;  /* Alternate mode*/
 
-    // GPIOB->PUPDR |= GPIO_PUPDR_PUPD15_0; /* Pull up*/
+     GPIOB->PUPDR |= GPIO_PUPDR_PUPD15_0; /* Pull up*/
 
     GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED13_1 | /*GPIO_OSPEEDR_OSPEED14_1 |*/ GPIO_OSPEEDR_OSPEED15_1; /* High speed*/
 

@@ -9,8 +9,6 @@ void HAL_ASSERT(bool condition)
     while (1) {}
 }
 
-
-
     /*
     GPIO A0 - Configuration of PDM->PCM mode. Pull down input.
     */

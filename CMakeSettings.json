@@ -14,7 +14,7 @@
       "variables": [
         {
           "name": "CMAKE_MAKE_PROGRAM",
-          "value": "C:\\\\git\\\\mf_devkit\\Tools\\MinGW\\bin\\mingw32-make.exe",
+          "value": "C:\\\\git\\\\mf_dev\\Tools\\MinGW\\bin\\mingw32-make.exe",
           "type": "STRING"
         },
         {
@@ -34,7 +34,7 @@
         },
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/UserData/z003tecs/Documents/programs/recorder/cmake/Toolchain-arm-eabi-gcc.cmake",
+          "value": "C:/UserData/z003tecs/Documents/Documents/programs/recorder/cmake/Toolchain-arm-eabi-gcc.cmake",
           "type": "FILEPATH"
         }
       ]

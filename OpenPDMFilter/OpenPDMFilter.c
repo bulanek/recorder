@@ -269,6 +269,15 @@ void Open_PDM_Filter_64(uint8_t* data, int16_t* dataOut, uint16_t volume, const 
   f_initStruct.OldIn = OldIn;
   f_initStruct.OldZ = OldZ;
 }
+static uint8_t _countSetBits(uint8_t n)
+{
+    uint8_t count = 0;
+    while (n) {
+        count += n & 1;
+        n >>= 1;
+    }
+    return count;
+}
 
 void Open_PDM_Filter_128(uint8_t* data, int16_t* dataOut, uint16_t volume, const unsigned int nSamples)
 {
@@ -277,6 +286,12 @@ void Open_PDM_Filter_128(uint8_t* data, int16_t* dataOut, uint16_t volume, const
   uint8_t data_inc = ((DECIMATION_MAX >> 3) * channels);
   int64_t Z, Z0, Z1, Z2;
   int64_t OldOut, OldIn, OldZ;
+#include "stdlib.h"
+  static uint8_t* pSizeBitware = 0;
+  if (pSizeBitware == 0)
+  {
+    pSizeBitware = (uint8_t*)malloc(nSamples);
+  }
 
   OldOut = f_initStruct.OldOut;
   OldIn = f_initStruct.OldIn;
@@ -310,6 +325,11 @@ void Open_PDM_Filter_128(uint8_t* data, int16_t* dataOut, uint16_t volume, const
     Z = SaturaLH(Z, -32700, 32700);
 
     dataOut[data_out_index] = Z;
+    pSizeBitware[i] = 0;
+    for (int j = 0; j < data_inc; ++j)
+    {
+        pSizeBitware[i] += _countSetBits(data[j]);
+    }
     data += data_inc;
   }
 

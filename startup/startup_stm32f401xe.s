@@ -129,7 +129,6 @@ Infinite_Loop:
   .type  g_pfnVectors, %object
   .size  g_pfnVectors, .-g_pfnVectors
     
-    
 g_pfnVectors:
   .word  _estack
   .word  Reset_Handler

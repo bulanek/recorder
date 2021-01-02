@@ -16,11 +16,11 @@ Set and cleared by software to divide the PLL and PLLI2S input clock before the 
 These bits can be written only when the PLL and PLLI2S are disabled. */
 
 
-#define RECORDER_I2S_PLLCFGR_PLLN 384U
+#define RECORDER_I2S_PLLCFGR_PLLN 256U
 
-#define RECORDER_I2S_PLLCFGR_PLLR 5U
+#define RECORDER_I2S_PLLCFGR_PLLR 2U
 
-#define RECORDER_I2S_I2SSPR_DIV 12U
+#define RECORDER_I2S_I2SSPR_DIV 62U
 
 #define RECORDER_I2S_I2SSPR_ODD 1U
 

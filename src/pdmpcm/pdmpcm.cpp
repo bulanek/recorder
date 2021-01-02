@@ -3,13 +3,15 @@
 #include "trace_com.h"
 
 
-uint16_t f_gain = 1U;
+uint16_t f_gain = 50U;
 uint16_t f_pdmBufLenWord, f_pcmBufLenWord;
 int16_t* f_pBufferPCMWord;
 uint8_t* f_pBufferPDMBytes;
 
 uint32_t f_pdmSamplingHz = 0; /* in pdmpcm_init*/
 const uint32_t f_decimationFactor = 128U;
+void (*f_FilterFunction)(uint8_t* data, int16_t* dataOut, uint16_t volume, const unsigned int nSamples) = Open_PDM_Filter_128;
+
 uint32_t f_pcmSamplingHz = 0; /* in pdmpcm_init */ 
 
 static_assert(sizeof(WaveFormatHeader) == 44, "Size of WaveFormatHeader not 44");
@@ -27,11 +29,10 @@ bool pdmpcm_init(void)
 
         f_pcmSamplingHz = f_pdmSamplingHz * 16U / f_decimationFactor;
 
-        //f_pcmSamplingHz /= 2;
 
         TPDMFilter_InitStruct filterPDM;
-        filterPDM.LP_HZ = 1000;// f_pcmSamplingHz / 2U;
-        filterPDM.HP_HZ = 30;
+        filterPDM.LP_HZ = 6000;// f_pcmSamplingHz / 2U;
+        filterPDM.HP_HZ = 20;
         filterPDM.Fs = f_pcmSamplingHz;
         filterPDM.Out_MicChannels = filterPDM.In_MicChannels = 1U;
         filterPDM.Decimation = f_decimationFactor;
@@ -42,7 +43,7 @@ bool pdmpcm_init(void)
 
 void pdmpcm_process( const uint8_t* const pDataPDMIn, int16_t* pDataPCMOut, uint16_t numOutSamples)
 {
-    Open_PDM_Filter_128((uint8_t *) pDataPDMIn, pDataPCMOut, f_gain, numOutSamples);
+    f_FilterFunction((uint8_t *) pDataPDMIn, pDataPCMOut, f_gain, numOutSamples);
 }
 
 uint16_t pdmpcm_get_decimation(void) { return f_decimationFactor; }
@@ -71,9 +72,9 @@ void fillWaveHeader(const uint32_t numDataBytes, WaveFormatHeader* const pDataBu
     pDataBuffer->_audioFormat = 1;
     pDataBuffer->_numChannels = 1;
     pDataBuffer->_sampleRate = f_pcmSamplingHz;
-    pDataBuffer->_bitsPerSample = 16;
+    pDataBuffer->_bitsPerSample = 16U;
     pDataBuffer->_byteRate = pDataBuffer->_sampleRate * pDataBuffer->_numChannels * pDataBuffer->_bitsPerSample / 8;
-    pDataBuffer->_blockAlign = pDataBuffer->_numChannels * pDataBuffer->_bitsPerSample / 8;
+    pDataBuffer->_blockAlign = pDataBuffer->_numChannels * pDataBuffer->_bitsPerSample / 8U;
     char subchunk2Id[] = { 'd','a','t','a' };
     memcpy(pDataBuffer->_subchunk2ID, subchunk2Id, 4);
     pDataBuffer->_subchunk2Size = numDataBytes;// numOutSamples* pDataBuffer->_numChannels* pDataBuffer->_bitsPerSample / 8;

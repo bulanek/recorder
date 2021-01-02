@@ -18,9 +18,13 @@
 #define SPI_CH	3	/* SPI channel to use = 1: SPI1, 11: SPI1/remap, 2: SPI2 */
 
 //#define FCLK_SLOW() { SPIx_CR1 =  (SPIx_CR1 & ~SPI_CR1_BR) | SPI_CR1_BR_2 | SPI_CR1_BR_0;    }	/* Set SCLK = PCLK / 64 */
-#define FCLK_SLOW() { SPIx_CR1 =  (SPIx_CR1 & ~SPI_CR1_BR) | SPI_CR1_BR_2 | SPI_CR1_BR_1;    }	/* Set SCLK = PCLK / 128  = 21.5MHz/127 = 168kHz*/
-//#define FCLK_FAST() { SPIx_CR1 = (SPIx_CR1 & ~SPI_CR1_BR); }	                                /* Set SCLK = PCLK / 2 */
-#define FCLK_FAST() { SPIx_CR1 = ((SPIx_CR1 & ~SPI_CR1_BR)) | SPI_CR1_BR_2 | SPI_CR1_BR_0; }	                /* Set SCLK = PCLK / 64 = 336kHz  */
+//#define FCLK_SLOW() { SPIx_CR1 =  (SPIx_CR1 & ~SPI_CR1_BR) | SPI_CR1_BR_2 | SPI_CR1_BR_1;    }	/* Set SCLK = PCLK / 128  = 21.5MHz/127 = 168kHz*/
+////#define FCLK_FAST() { SPIx_CR1 = (SPIx_CR1 & ~SPI_CR1_BR); }	                                /* Set SCLK = PCLK / 2 */
+//#define FCLK_FAST() { SPIx_CR1 = ((SPIx_CR1 & ~SPI_CR1_BR)) | SPI_CR1_BR_2 | SPI_CR1_BR_0; }	                /* Set SCLK = PCLK / 64 = 336kHz  */
+
+#define FCLK_SLOW() { SPIx_CR1 =  (SPIx_CR1 & ~SPI_CR1_BR) | SPI_CR1_BR_2 | SPI_CR1_BR_0;    }	/* Set SCLK = PCLK / 64  = 21.5MHz/64 = 336kHz*/
+#define FCLK_FAST() { SPIx_CR1 = (SPIx_CR1 & ~SPI_CR1_BR); }	                                /* Set SCLK = PCLK / 2 = 21.5 MHz /2  = 10.7 MHz */
+
 
 #if SPI_CH == 1	/* PA4:MMC_CS, PA5:MMC_SCLK, PA6:MMC_DO, PA7:MMC_DI, PC4:MMC_CD */
 #define CS_HIGH()	(GPIOA->BSRR = GPIO_BSRR_BS4 )
